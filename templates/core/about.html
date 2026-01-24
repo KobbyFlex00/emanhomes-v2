@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+
+<div class="bg-primary-custom text-white py-5 text-center">
+    <div class="container">
+        <div class="mb-4 bg-white p-3 d-inline-block rounded shadow-lg">
+             <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes Logo" style="width: 180px; height: auto; display: block;">
+        </div>
+        <h1 class="fw-bold display-5">Building the Future of Accra</h1>
+        <p class="lead mx-auto" style="max-width: 700px;">EmanHomes: Partners in wealth creation and legacy building.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <h6 class="text-accent fw-bold text-uppercase">Who We Are</h6>
+            <h2 class="fw-bold mb-4" style="color: var(--primary);">Integrity, Transparency, and Excellence.</h2>
+            <p class="text-muted">Founded with a vision to eliminate litigation issues in the Ghanaian land market, EmanHomes has grown into a trusted name for genuine property acquisition.</p>
+            <p class="text-muted">We specialize in litigation-free lands in prime areas like East Legon Hills, Dzen-Ayor, and beyond.</p>
+            
+            <div class="row mt-4">
+                <div class="col-6">
+                    <h2 class="fw-bold text-primary-custom">10+</h2>
+                    <p class="small text-muted">Years Experience</p>
+                </div>
+                <div class="col-6">
+                    <h2 class="fw-bold text-primary-custom">500+</h2>
+                    <p class="small text-muted">Happy Clients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="row g-3">
+                {% for member in team_members %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        {% if member.image %}
+                        <img src="{{ member.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ member.name }}">
+                        {% endif %}
+                        <div class="card-body text-center">
+                            <h5 class="fw-bold mb-1">{{ member.name }}</h5>
+                            <p class="text-accent small fw-bold mb-2">{{ member.role }}</p>
+                            <p class="small text-muted mb-0">{{ member.bio }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center text-muted">
+                    <p>Team members will be added soon.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

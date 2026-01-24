@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EmanHomes{% endblock %} | Real Estate Professionals</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #0D2E59; 
+            --accent: #D4AF37; 
+        }
+        .bg-primary-custom { background-color: var(--primary); }
+        .text-accent { color: var(--accent); }
+        .btn-accent { background-color: var(--accent); color: white; border: none; }
+        .btn-accent:hover { background-color: #b8962e; color: white; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <div class="bg-primary-custom text-white py-2 small">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-phone-alt me-2"></i> {{ site_config.main_phone }}
+                <span class="mx-3">|</span>
+                <i class="fas fa-envelope me-2"></i> {{ site_config.main_email }}
+            </div>
+            <div>
+                <i class="fas fa-map-marker-alt me-2"></i> {{ site_config.office_location }}
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes" height="50" class="me-2">
+                <span class="fw-bold text-primary-custom">EMANHOMES</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'about' %}">About Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'home' %}#services">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'contact' %}">Contact</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'client_portal' %}" class="btn btn-accent rounded-pill px-4">
+                                <i class="fas fa-user-circle me-1"></i> My Portal
+                            </a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-outline-primary rounded-pill px-4">
+                                Client Login
+                            </a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow-1">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="bg-primary-custom text-white pt-5 pb-3 mt-auto">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-accent mb-3">EmanHomes</h5>
+                    <p class="small text-white-50">Providing litigation-free lands and premium homes in Ghana's most sought-after locations. Your security is our priority.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-accent mb-3">Quick Links</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="{% url 'home' %}?category=land" class="text-white-50 text-decoration-none">Land Sales</a></li>
+                        <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none">Book a Site Visit</a></li>
+                        <li class="mb-2"><a href="{% url 'client_portal' %}" class="text-white-50 text-decoration-none">Client Portal</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-accent mb-3">Contact Us</h5>
+                    <ul class="list-unstyled small text-white-50">
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> {{ site_config.main_phone }}</li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> {{ site_config.main_email }}</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> {{ site_config.office_location }}</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="text-center small text-white-50">
+                &copy; 2026 EmanHomes Ghana. All Rights Reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

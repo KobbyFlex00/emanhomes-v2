@@ -1,0 +1,87 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ property.title }}{% endblock %}
+
+{% block content %}
+
+<div class="bg-light py-3">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ property.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <div class="rounded overflow-hidden shadow-sm mb-4">
+                {% if property.main_image %}
+                <img src="{{ property.main_image.url }}" class="w-100" style="height: 400px; object-fit: cover;" alt="{{ property.title }}">
+                {% else %}
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 400px;">No Image Available</div>
+                {% endif %}
+            </div>
+
+            <h2 class="fw-bold mb-2">{{ property.title }}</h2>
+            <p class="text-muted mb-4"><i class="fas fa-map-marker-alt text-accent me-2"></i>{{ property.location }}</p>
+
+            <div class="bg-light p-4 rounded mb-4">
+                <h5 class="fw-bold mb-3">Property Description</h5>
+                <p class="text-muted mb-0" style="white-space: pre-line;">{{ property.description }}</p>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center p-3 border rounded">
+                        <i class="fas fa-file-contract text-accent fa-2x me-3"></i>
+                        <div>
+                            <small class="text-muted d-block">Document Status</small>
+                            <span class="fw-bold">{% if property.is_registered %}Indenture Ready{% else %}Processing{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center p-3 border rounded">
+                        <i class="fas fa-tag text-accent fa-2x me-3"></i>
+                        <div>
+                            <small class="text-muted d-block">Property Type</small>
+                            <span class="fw-bold">{{ property.get_category_display }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                <div class="card-body p-4">
+                    <h6 class="text-muted text-uppercase small fw-bold">Price</h6>
+                    <h2 class="text-primary-custom fw-bold mb-4">${{ property.price|intcomma }}</h2>
+
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'contact' %}?subject=Request Documents for {{ property.title }}" class="btn btn-outline-primary py-3 fw-bold">
+                            <i class="fas fa-file-download me-2"></i> Request Documents
+                        </a>
+
+                        <a href="{% url 'contact' %}?subject=Book Site Visit for {{ property.title }}" class="btn btn-accent text-white py-3 fw-bold">
+                            <i class="fas fa-calendar-check me-2"></i> Book Site Visit
+                        </a>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <small class="text-muted">Need immediate assistance?</small>
+                        <div class="fw-bold mt-1">
+                            <i class="fas fa-phone-alt text-accent me-1"></i> {{ site_config.main_phone }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

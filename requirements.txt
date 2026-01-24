@@ -1,0 +1,8 @@
+asgiref==3.11.0
+Django==6.0.1
+gunicorn==24.1.1
+packaging==26.0
+pillow==12.1.0
+sqlparse==0.5.5
+tzdata==2025.3
+whitenoise==6.11.0

@@ -1,0 +1,175 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+
+<div class="position-relative" style="height: 85vh; min-height: 600px; overflow: hidden;">
+    
+    <div id="heroCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-inner h-100">
+            <div class="carousel-item active h-100">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop" class="d-block w-100 h-100" style="object-fit: cover;" alt="Modern Home">
+            </div>
+            <div class="carousel-item h-100">
+                <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2832&auto=format&fit=crop" class="d-block w-100 h-100" style="object-fit: cover;" alt="Litigation Free Land">
+            </div>
+            <div class="carousel-item h-100">
+                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Interior">
+            </div>
+        </div>
+    </div>
+
+    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center text-white" style="background: rgba(13, 46, 89, 0.6); z-index: 10;">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-3 animate-up">Find Your Peace of Mind</h1>
+            <p class="lead mb-5 fs-4 animate-up" style="animation-delay: 0.2s;">Secure, litigation-free lands and premium homes in East Legon & beyond.</p>
+            
+            <div class="card p-3 border-0 shadow-lg w-100 mx-auto animate-up" style="max-width: 800px; border-radius: 15px; animation-delay: 0.4s;">
+                <form action="{% url 'home' %}" method="get" class="row g-2">
+                    <div class="col-md-4">
+                        <select name="category" class="form-select border-0 bg-light py-3">
+                            <option value="all">All Types</option>
+                            <option value="land" {% if search_category == 'land' %}selected{% endif %}>Land</option>
+                            <option value="residential" {% if search_category == 'residential' %}selected{% endif %}>House</option>
+                            <option value="commercial" {% if search_category == 'commercial' %}selected{% endif %}>Commercial</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control border-0 bg-light py-3" placeholder="Search Location (e.g. Hills)">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-accent w-100 h-100 fw-bold">
+                            <i class="fas fa-search me-2"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3 col-6">
+                <h2 class="fw-bold text-accent">50+</h2>
+                <p class="text-muted small text-uppercase">Plots Sold</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h2 class="fw-bold text-accent">100%</h2>
+                <p class="text-muted small text-uppercase">Litigation Free</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h2 class="fw-bold text-accent">24/7</h2>
+                <p class="text-muted small text-uppercase">Site Security</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h2 class="fw-bold text-accent">5yr</h2>
+                <p class="text-muted small text-uppercase">Payment Plans</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h6 class="text-accent fw-bold text-uppercase">Opportunities</h6>
+            <h2 class="fw-bold" style="color: var(--primary);">Featured Listings</h2>
+        </div>
+
+        <div class="row g-4">
+            {% for property in properties %}
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 overflow-hidden property-card">
+                    <div class="position-relative">
+                        {% if property.main_image %}
+                            <img src="{{ property.main_image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ property.title }}">
+                        {% else %}
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 250px;">No Image</div>
+                        {% endif %}
+                        <span class="badge bg-accent position-absolute top-0 end-0 m-3">{{ property.get_category_display }}</span>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-1 text-truncate">{{ property.title }}</h5>
+                        <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1"></i> {{ property.location }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <h5 class="text-accent fw-bold mb-0">${{ property.price|intcomma }}</h5>
+                            
+                            {% if property.slug %}
+                                <a href="{% url 'property_detail' property.slug %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Details</a>
+                            {% else %}
+                                <span class="btn btn-secondary btn-sm disabled rounded-pill px-3">Unavailable</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="text-muted mb-3"><i class="fas fa-search fa-3x opacity-25"></i></div>
+                <h4>No properties found</h4>
+                <p class="text-muted">We couldn't find any matches. <a href="{% url 'home' %}" class="text-accent fw-bold text-decoration-none">Clear Filters</a></p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="{% url 'home' %}?category=all" class="btn btn-primary px-5 py-3 rounded-pill shadow">View All Properties</a>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" id="services">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-4 mb-lg-0">
+                <h6 class="text-accent fw-bold text-uppercase">What We Do</h6>
+                <h2 class="fw-bold mb-4" style="color: var(--primary);">Comprehensive Real Estate Solutions</h2>
+                <p class="text-muted mb-4">We don't just sell land; we help you build your legacy. From surveying to construction, EmanHomes is your partner every step of the way.</p>
+                <a href="{% url 'about' %}" class="btn btn-outline-dark rounded-pill px-4">Learn More About Us</a>
+            </div>
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    {% for service in services %}
+                    <div class="col-md-6">
+                        <div class="p-4 border rounded bg-white shadow-sm h-100">
+                            <i class="{{ service.icon_name|default:'fas fa-check' }} text-accent fa-2x mb-3"></i>
+                            <h5 class="fw-bold">{{ service.title }}</h5>
+                            <p class="small text-muted mb-0">{{ service.description|truncatechars:150 }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-primary-custom text-white text-center">
+    <div class="container py-4">
+        <h2 class="fw-bold mb-3">Ready to Secure Your Plot?</h2>
+        <p class="lead mb-4 text-white-50">Schedule a free site visit to East Legon Hills or Dzen-Ayor today.</p>
+        <a href="tel:{{ site_config.main_phone }}" class="btn btn-accent btn-lg rounded-pill px-5 mx-2">Call Now</a>
+        <a href="#" class="btn btn-outline-light btn-lg rounded-pill px-5 mx-2">WhatsApp Us</a>
+    </div>
+</section>
+
+<style>
+    .animate-up {
+        animation: fadeInUp 1s ease-out forwards;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+{% endblock %}
