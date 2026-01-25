@@ -123,7 +123,7 @@
     </div>
 </section>
 
-<<section class="py-5" id="services">
+<section class="py-5" id="services">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-5 mb-4 mb-lg-0">
@@ -138,9 +138,15 @@
                     <div class="col-md-6">
                         <div class="p-4 border rounded bg-white shadow-sm h-100">
                             <i class="{{ service.icon_name|default:'fas fa-check' }} text-accent fa-2x mb-3"></i>
+                            
                             <h5 class="fw-bold">{{ service.title }}</h5>
+                            
                             <p class="small text-muted mb-0">{{ service.description|truncatechars:350 }}</p>
                         </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted">
+                        <p>No services added yet.</p>
                     </div>
                     {% endfor %}
                 </div>
