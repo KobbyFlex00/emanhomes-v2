@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-local-key-here')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # We explicitly set this to False for production safety
-DEBUG = False 
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
