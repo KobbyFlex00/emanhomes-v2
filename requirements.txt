@@ -5,3 +5,5 @@ Pillow
 sqlparse
 dj-database-url
 psycopg2-binary
+django-cloudinary-storage==0.3.0
+cloudinary==1.36.0
