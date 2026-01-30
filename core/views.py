@@ -8,13 +8,18 @@ def home(request):
     query = request.GET.get('q')
     category = request.GET.get('category')
 
-    properties = Property.objects.filter(is_featured=True)
+    
+    properties = Property.objects.all().order_by('-created_at')
 
+    
     if query:
         properties = properties.filter(location__icontains=query)
     
     if category and category != 'all':
         properties = properties.filter(category=category)
+
+    
+    properties = properties[:6]
 
     services = Service.objects.all()
     
@@ -34,7 +39,7 @@ def properties_list(request):
     query = request.GET.get('q')
     category = request.GET.get('category')
 
-    properties = Property.objects.all()
+    properties = Property.objects.all().order_by('-created_at')
 
     if query:
         properties = properties.filter(location__icontains=query)
@@ -69,7 +74,7 @@ def contact(request):
                 subject,
                 full_message,
                 settings.EMAIL_HOST_USER,  
-                ['emanpages@gmail.com'],  
+                ['emanpages@gmail.com'],   
                 fail_silently=False,
             )
             messages.success(request, "Message sent successfully! We will get back to you soon.")
