@@ -4,99 +4,91 @@
 
 {% block content %}
 
-<div class="bg-primary-custom text-white py-5 text-center">
-    <div class="container">
+<div class="bg-primary-custom py-5 text-white mb-5">
+    <div class="container text-center">
         <h1 class="fw-bold">Get in Touch</h1>
-        <p class="lead">Visit our office in East Legon or send us a message.</p>
+        <p class="lead text-white-50">Visit our office in East Legon or send us a message.</p>
     </div>
 </div>
 
-<div class="container py-5">
+<div class="container mb-5">
     <div class="row g-5">
         
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <h4 class="fw-bold mb-4" style="color: var(--primary);">Contact Information</h4>
-                    
-                    <div class="d-flex mb-4">
-                        <div class="text-accent me-3"><i class="fas fa-map-marker-alt fa-2x"></i></div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Office Location</h6>
-                            <p class="text-muted mb-0">{{ site_config.office_location }}<br>Accra, Ghana</p>
-                        </div>
+            <h3 class="fw-bold text-primary mb-4">Contact Information</h3>
+            
+            <div class="d-flex mb-4">
+                <div class="flex-shrink-0">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fas fa-map-marker-alt text-accent fa-lg"></i>
                     </div>
+                </div>
+                <div class="ms-3">
+                    <h5 class="fw-bold mb-1">Office Location</h5>
+                    <p class="text-muted mb-0">{{ site_config.address|default:"Dzen-Ayor, East Legon" }}<br>Accra, Ghana</p>
+                </div>
+            </div>
 
-                    <div class="d-flex mb-4">
-                        <div class="text-accent me-3"><i class="fas fa-phone-alt fa-2x"></i></div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Phone Number</h6>
-                            <p class="text-muted mb-0">{{ site_config.main_phone }}</p>
-                            <small class="text-success">Available Mon-Fri, 8am - 5pm</small>
-                        </div>
+            <div class="d-flex mb-4">
+                <div class="flex-shrink-0">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fas fa-phone-alt text-accent fa-lg"></i>
                     </div>
+                </div>
+                <div class="ms-3">
+                    <h5 class="fw-bold mb-1">Phone Number</h5>
+                    <p class="text-muted mb-0">{{ site_config.main_phone|default:"+233 20 584 3775" }}</p>
+                    <small class="text-success fw-bold">Available Mon-Fri, 8am - 5pm</small>
+                </div>
+            </div>
 
-                    <div class="d-flex mb-4">
-                        <div class="text-accent me-3"><i class="fas fa-envelope fa-2x"></i></div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Email Address</h6>
-                            <p class="text-muted mb-0">{{ site_config.main_email }}</p>
-                        </div>
+            <div class="d-flex mb-4">
+                <div class="flex-shrink-0">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fas fa-envelope text-accent fa-lg"></i>
                     </div>
-
-                    <div class="rounded overflow-hidden mt-4 shadow-sm">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.4379963625056!2d-0.1415286252538166!3d5.64960309433159!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfdf852778736a3f%3A0x6b16e456672c2194!2sEman%20Homes%20Ltd!5e0!3m2!1sen!2sgh!4v1737735300000!5m2!1sen!2sgh" 
-                                width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                    </div>
+                </div>
+                <div class="ms-3">
+                    <h5 class="fw-bold mb-1">Email Address</h5>
+                    <p class="text-muted mb-0">{{ site_config.email|default:"emanpages@gmail.com" }}</p>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-7">
-            <h3 class="fw-bold mb-4">Send us a Message</h3>
-            
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <div>{{ message }}</div>
-                </div>
-                {% endfor %}
-            {% endif %}
-
-            <form method="post">
-                {% csrf_token %}
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            {{ form.name }}
-                            <label for="name">Your Name</label>
+            <div class="card border-0 shadow-sm p-4">
+                <h3 class="fw-bold text-primary mb-4">Send us a Message</h3>
+                
+                <form method="post" action="{% url 'contact' %}">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label fw-bold small text-uppercase text-muted">Your Name</label>
+                            <input type="text" class="form-control form-control-lg bg-light border-0" id="name" name="name" placeholder="John Doe" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-bold small text-uppercase text-muted">Your Email</label>
+                            <input type="email" class="form-control form-control-lg bg-light border-0" id="email" name="email" placeholder="john@example.com" required>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="message" class="form-label fw-bold small text-uppercase text-muted">Message</label>
+                            <textarea class="form-control form-control-lg bg-light border-0" id="message" name="message" rows="5" placeholder="How can we help you today?" required></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-accent w-100 py-3 fw-bold shadow-sm">
+                                <i class="fas fa-paper-plane me-2"></i> Send Message
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            {{ form.email }}
-                            <label for="email">Your Email</label>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-floating">
-                            {{ form.subject }}
-                            <label for="subject">Subject</label>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-floating">
-                            {{ form.message }}
-                            <label for="message">Message</label>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <button class="btn btn-accent btn-lg w-100 text-white fw-bold py-3" type="submit">Send Message</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
+        
     </div>
 </div>
+
 {% endblock %}
