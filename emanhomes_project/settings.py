@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'cloudinary_storage', 
     'django.contrib.admin',
     'django.contrib.auth',
-    'cloudinary',  Cloudinary second
+    'cloudinary',  
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
