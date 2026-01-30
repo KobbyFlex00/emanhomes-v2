@@ -3,7 +3,6 @@
 {% block title %}Contact Us{% endblock %}
 
 {% block content %}
-
 <div class="bg-primary-custom py-5 text-white mb-5">
     <div class="container text-center">
         <h1 class="fw-bold">Get in Touch</h1>
@@ -13,82 +12,47 @@
 
 <div class="container mb-5">
     <div class="row g-5">
-        
         <div class="col-lg-5">
             <h3 class="fw-bold text-primary mb-4">Contact Information</h3>
-            
             <div class="d-flex mb-4">
-                <div class="flex-shrink-0">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                        <i class="fas fa-map-marker-alt text-accent fa-lg"></i>
-                    </div>
-                </div>
-                <div class="ms-3">
-                    <h5 class="fw-bold mb-1">Office Location</h5>
-                    <p class="text-muted mb-0">{{ site_config.address|default:"Dzen-Ayor, East Legon" }}<br>Accra, Ghana</p>
-                </div>
+                <div class="flex-shrink-0"><div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;"><i class="fas fa-map-marker-alt text-accent fa-lg"></i></div></div>
+                <div class="ms-3"><h5 class="fw-bold mb-1">Office Location</h5><p class="text-muted mb-0">{{ site_config.address|default:"Dzen-Ayor, East Legon" }}</p></div>
             </div>
-
             <div class="d-flex mb-4">
-                <div class="flex-shrink-0">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                        <i class="fas fa-phone-alt text-accent fa-lg"></i>
-                    </div>
-                </div>
-                <div class="ms-3">
-                    <h5 class="fw-bold mb-1">Phone Number</h5>
-                    <p class="text-muted mb-0">{{ site_config.main_phone|default:"+233 20 584 3775" }}</p>
-                    <small class="text-success fw-bold">Available Mon-Fri, 8am - 5pm</small>
-                </div>
+                <div class="flex-shrink-0"><div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;"><i class="fas fa-phone-alt text-accent fa-lg"></i></div></div>
+                <div class="ms-3"><h5 class="fw-bold mb-1">Phone Number</h5><p class="text-muted mb-0">{{ site_config.main_phone|default:"+233 20 584 3775" }}</p></div>
             </div>
-
             <div class="d-flex mb-4">
-                <div class="flex-shrink-0">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                        <i class="fas fa-envelope text-accent fa-lg"></i>
-                    </div>
-                </div>
-                <div class="ms-3">
-                    <h5 class="fw-bold mb-1">Email Address</h5>
-                    <p class="text-muted mb-0">{{ site_config.email|default:"emanpages@gmail.com" }}</p>
-                </div>
+                <div class="flex-shrink-0"><div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;"><i class="fas fa-envelope text-accent fa-lg"></i></div></div>
+                <div class="ms-3"><h5 class="fw-bold mb-1">Email Address</h5><p class="text-muted mb-0">{{ site_config.email|default:"emanpages@gmail.com" }}</p></div>
             </div>
         </div>
 
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm p-4">
                 <h3 class="fw-bold text-primary mb-4">Send us a Message</h3>
-                
                 <form method="post" action="{% url 'contact' %}">
                     {% csrf_token %}
-                    
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="name" class="form-label fw-bold small text-uppercase text-muted">Your Name</label>
-                            <input type="text" class="form-control form-control-lg bg-light border-0" id="name" name="name" placeholder="John Doe" required>
+                            <label class="form-label fw-bold small text-muted">Your Name</label>
+                            <input type="text" class="form-control form-control-lg bg-light border-0" name="name" placeholder="John Doe" required>
                         </div>
-                        
                         <div class="col-md-6">
-                            <label for="email" class="form-label fw-bold small text-uppercase text-muted">Your Email</label>
-                            <input type="email" class="form-control form-control-lg bg-light border-0" id="email" name="email" placeholder="john@example.com" required>
+                            <label class="form-label fw-bold small text-muted">Your Email</label>
+                            <input type="email" class="form-control form-control-lg bg-light border-0" name="email" placeholder="john@example.com" required>
                         </div>
-                        
                         <div class="col-12">
-                            <label for="message" class="form-label fw-bold small text-uppercase text-muted">Message</label>
-                            <textarea class="form-control form-control-lg bg-light border-0" id="message" name="message" rows="5" placeholder="How can we help you today?" required></textarea>
+                            <label class="form-label fw-bold small text-muted">Message</label>
+                            <textarea class="form-control form-control-lg bg-light border-0" name="message" rows="5" placeholder="How can we help?" required></textarea>
                         </div>
-                        
                         <div class="col-12">
-                            <button type="submit" class="btn btn-accent w-100 py-3 fw-bold shadow-sm">
-                                <i class="fas fa-paper-plane me-2"></i> Send Message
-                            </button>
+                            <button type="submit" class="btn btn-accent w-100 py-3 fw-bold shadow-sm">Send Message</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
-        
     </div>
 </div>
-
 {% endblock %}
