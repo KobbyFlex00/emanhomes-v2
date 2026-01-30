@@ -1,15 +1,17 @@
 from django.db import models
 from django.utils.text import slugify
 
-# --- Site Configuration (Your existing model) ---
+# --- Site Configuration (With REAL Defaults) ---
 class SiteConfiguration(models.Model):
     site_name = models.CharField(max_length=200, default="EmanHomes")
-    main_phone = models.CharField(max_length=50, default="+233 24 000 0000")
-    email = models.EmailField(default="info@emanhomes.com")
-    address = models.TextField(default="Accra, Ghana")
-    facebook = models.URLField(blank=True, null=True)
+    main_phone = models.CharField(max_length=50, default="+233 20 584 3775")
+    email = models.EmailField(default="emanpages@gmail.com")
+    address = models.TextField(default="Dzen-Ayor, East Legon, Accra, Ghana")
+    
+    # Social Media Defaults
+    facebook = models.URLField(blank=True, null=True, default="https://www.facebook.com/emanhomes")
+    instagram = models.URLField(blank=True, null=True, default="https://www.instagram.com/emanhomes")
     twitter = models.URLField(blank=True, null=True)
-    instagram = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
 
     def __str__(self):
@@ -19,7 +21,7 @@ class SiteConfiguration(models.Model):
         verbose_name = "Site Configuration"
         verbose_name_plural = "Site Configuration"
 
-# --- Team Member (Your existing model) ---
+# --- Team Member ---
 class TeamMember(models.Model):
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=100)
@@ -29,7 +31,7 @@ class TeamMember(models.Model):
     def __str__(self):
         return self.name
 
-# --- Service (Your existing model) ---
+# --- Service ---
 class Service(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -38,7 +40,7 @@ class Service(models.Model):
     def __str__(self):
         return self.title
 
-# --- Property (Your existing model) ---
+# --- Property ---
 class Property(models.Model):
     CATEGORY_CHOICES = (
         ('land', 'Land'),
@@ -55,8 +57,6 @@ class Property(models.Model):
     main_image = models.ImageField(upload_to='properties/')
     created_at = models.DateTimeField(auto_now_add=True)
     
-    # Simple fix for "is_featured" error: We just don't use it.
-    
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
@@ -68,7 +68,7 @@ class Property(models.Model):
     class Meta:
         verbose_name_plural = "Properties"
 
-# --- NEW: Contact Message (Saves emails to Admin) ---
+# --- Contact Message (Saves emails to Admin) ---
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()

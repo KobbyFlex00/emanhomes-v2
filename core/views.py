@@ -7,8 +7,6 @@ from .models import Property, Service, TeamMember, ContactMessage
 def home(request):
     query = request.GET.get('q')
     category = request.GET.get('category')
-    
-    # Get all properties, sorted by newest first (fixes is_featured error)
     properties = Property.objects.all().order_by('-created_at')
 
     if query:
@@ -58,14 +56,14 @@ def contact(request):
         email = request.POST.get('email')
         message_text = request.POST.get('message')
 
-        # 1. Save to Database (So you see it in Admin)
+        # 1. Save to Database (Admin Panel Backup)
         ContactMessage.objects.create(
             name=name,
             email=email,
             message=message_text
         )
 
-        # 2. Send Email (To your Inbox)
+        # 2. Send Email
         subject = f"New Inquiry from {name} (EmanHomes)"
         full_message = f"Sender Name: {name}\nSender Email: {email}\n\nMessage:\n{message_text}"
 
@@ -74,13 +72,14 @@ def contact(request):
                 subject,
                 full_message,
                 settings.EMAIL_HOST_USER,
-                ['emanpages@gmail.com'],
+                ['emanpages@gmail.com'], # Real email
                 fail_silently=False,
             )
             messages.success(request, "Message sent successfully! We will get back to you soon.")
         except Exception as e:
-            # We still show success if DB save worked, but log the email error
-            messages.warning(request, f"Message saved to Admin panel, but email failed: {e}")
+            # Show success anyway because we saved it to the database
+            messages.success(request, "Message received! We will contact you shortly.")
+            print(f"Email failed: {e}") # Log error for debugging
             
         return redirect('contact')
             
