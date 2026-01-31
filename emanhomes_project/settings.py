@@ -12,7 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-local-key')
+
+# SECURITY: Must be False in production
 DEBUG = False 
+
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -89,20 +92,20 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# --- CLOUDINARY CONFIGURATION (Crucial for Images) ---
+# --- CLOUDINARY (Secure Images Fix) ---
 cloudinary.config(
-    secure=True  # This prevents the broken image icon
+    secure=True
 )
 MEDIA_URL = '/media/'
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# --- SECURITY SETTINGS ---
+# --- SECURITY (HTTPS Fix) ---
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-# --- EMAIL CONFIGURATION ---
+# --- EMAIL (Gmail) ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587

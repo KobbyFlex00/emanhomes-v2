@@ -1,0 +1,51 @@
+<div class="card shadow-sm border-0 p-4 bg-light">
+    <h4 class="fw-bold text-primary mb-3"><i class="fas fa-calculator me-2"></i>Mortgage Calculator</h4>
+    
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">Home Price ($)</label>
+            <input type="number" id="homePrice" class="form-control" placeholder="100000">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">Down Payment ($)</label>
+            <input type="number" id="downPayment" class="form-control" placeholder="20000">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">Interest Rate (%)</label>
+            <input type="number" id="interestRate" class="form-control" value="6.5" step="0.1">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">Loan Term (Years)</label>
+            <select id="loanTerm" class="form-select">
+                <option value="30">30 Years</option>
+                <option value="15">15 Years</option>
+                <option value="10">10 Years</option>
+            </select>
+        </div>
+        <div class="col-12 text-center mt-3">
+            <h5 class="fw-bold">Monthly Payment: <span class="text-accent" id="monthlyPayment">$0.00</span></h5>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputs = document.querySelectorAll('#homePrice, #downPayment, #interestRate, #loanTerm');
+    inputs.forEach(input => input.addEventListener('input', calculateMortgage));
+
+    function calculateMortgage() {
+        const price = parseFloat(document.getElementById('homePrice').value) || 0;
+        const down = parseFloat(document.getElementById('downPayment').value) || 0;
+        const rate = parseFloat(document.getElementById('interestRate').value) || 0;
+        const years = parseFloat(document.getElementById('loanTerm').value) || 30;
+
+        const principal = price - down;
+        const monthlyRate = rate / 100 / 12;
+        const numberOfPayments = years * 12;
+
+        if (principal > 0 && rate > 0) {
+            const x = Math.pow(1 + monthlyRate, numberOfPayments);
+            const monthly = (principal * x * monthlyRate) / (x - 1);
+            document.getElementById('monthlyPayment').innerText = '$' + monthly.toFixed(2);
+        }
+    }
+</script>

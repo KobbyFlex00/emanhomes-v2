@@ -7,7 +7,7 @@ from .models import Property, Service, TeamMember, ContactMessage
 def home(request):
     query = request.GET.get('q')
     category = request.GET.get('category')
-    properties = Property.objects.all().order_by('-created_at')
+    properties = Property.objects.all().order_by('-created_at') # Newest first
 
     if query:
         properties = properties.filter(location__icontains=query)
@@ -56,30 +56,24 @@ def contact(request):
         email = request.POST.get('email')
         message_text = request.POST.get('message')
 
-        # 1. Save to Database (Admin Panel Backup)
-        ContactMessage.objects.create(
-            name=name,
-            email=email,
-            message=message_text
-        )
+        # 1. Save to Database
+        ContactMessage.objects.create(name=name, email=email, message=message_text)
 
         # 2. Send Email
         subject = f"New Inquiry from {name} (EmanHomes)"
-        full_message = f"Sender Name: {name}\nSender Email: {email}\n\nMessage:\n{message_text}"
+        full_message = f"Sender: {name}\nEmail: {email}\n\nMessage:\n{message_text}"
 
         try:
             send_mail(
                 subject,
                 full_message,
                 settings.EMAIL_HOST_USER,
-                ['emanpages@gmail.com'], # Real email
+                ['emanpages@gmail.com'],
                 fail_silently=False,
             )
-            messages.success(request, "Message sent successfully! We will get back to you soon.")
-        except Exception as e:
-            # Show success anyway because we saved it to the database
+            messages.success(request, "Message sent successfully!")
+        except Exception:
             messages.success(request, "Message received! We will contact you shortly.")
-            print(f"Email failed: {e}") # Log error for debugging
             
         return redirect('contact')
             
