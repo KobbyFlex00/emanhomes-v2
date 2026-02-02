@@ -5,57 +5,108 @@
 
 {% block content %}
 
-<div class="bg-primary-custom text-white py-5 text-center">
-    <div class="container">
-        <div class="mb-4 bg-white p-3 d-inline-block rounded shadow-lg">
-             <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes Logo" style="width: 180px; height: auto; display: block;">
+<div class="position-relative py-5 mb-5 d-flex align-items-center justify-content-center" 
+     style="background-color: var(--primary); min-height: 400px; overflow: hidden;">
+    
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; 
+                background-image: linear-gradient(30deg, #ffffff 12%, transparent 12.5%, transparent 87%, #ffffff 87.5%, #ffffff), 
+                linear-gradient(150deg, #ffffff 12%, transparent 12.5%, transparent 87%, #ffffff 87.5%, #ffffff), 
+                linear-gradient(30deg, #ffffff 12%, transparent 12.5%, transparent 87%, #ffffff 87.5%, #ffffff), 
+                linear-gradient(150deg, #ffffff 12%, transparent 12.5%, transparent 87%, #ffffff 87.5%, #ffffff), 
+                linear-gradient(60deg, #77777777 25%, transparent 25.5%, transparent 75%, #77777777 75%, #77777777), 
+                linear-gradient(60deg, #77777777 25%, transparent 25.5%, transparent 75%, #77777777 75%, #77777777);
+                background-size: 80px 140px; background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;">
+    </div>
+
+    <div class="container text-center position-relative" style="z-index: 2;">
+        <div class="bg-white p-4 rounded-circle shadow-lg d-inline-block mb-4" style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
+            <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes Logo" class="img-fluid" style="max-width: 80%;">
         </div>
-        <h1 class="fw-bold display-5">Building the Future of Accra</h1>
-        <p class="lead mx-auto" style="max-width: 700px;">EmanHomes: Partners in wealth creation and legacy building.</p>
+        
+        <h1 class="display-4 fw-bold text-white mb-2">About EmanHomes</h1>
+        <p class="lead text-white-50 mx-auto" style="max-width: 600px;">
+            Building trust, delivering excellence, and securing your future in Ghanaian real estate.
+        </p>
     </div>
 </div>
 
-<div class="container py-5">
-    <div class="row align-items-center g-5">
+<div class="container mb-5">
+    <div class="row g-5 align-items-center">
         <div class="col-lg-6">
-            <h6 class="text-accent fw-bold text-uppercase">Who We Are</h6>
+            <h6 class="text-accent fw-bold text-uppercase mb-2">Who We Are</h6>
             <h2 class="fw-bold mb-4" style="color: var(--primary);">Integrity, Transparency, and Excellence.</h2>
-            <p class="text-muted">Founded with a vision to eliminate litigation issues in the Ghanaian land market, EmanHomes has grown into a trusted name for genuine property acquisition.</p>
-            <p class="text-muted">We specialize in litigation-free lands in prime areas like East Legon Hills, Dzen-Ayor, and beyond.</p>
             
-            <div class="row mt-4">
+            <p class="text-secondary mb-4" style="line-height: 1.8;">
+                Founded with a vision to eliminate litigation issues in the Ghanaian land market, EmanHomes has grown into a trusted name for genuine property acquisition.
+            </p>
+            <p class="text-secondary mb-4" style="line-height: 1.8;">
+                We specialize in litigation-free lands in prime areas like East Legon Hills, Dzen-Ayor, and beyond. Our mission is to make land ownership safe, seamless, and secure for every client.
+            </p>
+
+            <div class="row mt-5">
                 <div class="col-6">
-                    <h2 class="fw-bold text-primary-custom">10+</h2>
-                    <p class="small text-muted">Years Experience</p>
+                    <h2 class="fw-bold text-primary mb-0">10+</h2>
+                    <p class="text-muted small">Years Experience</p>
                 </div>
                 <div class="col-6">
-                    <h2 class="fw-bold text-primary-custom">500+</h2>
-                    <p class="small text-muted">Happy Clients</p>
+                    <h2 class="fw-bold text-primary mb-0">500+</h2>
+                    <p class="text-muted small">Happy Clients</p>
                 </div>
             </div>
         </div>
+
         <div class="col-lg-6">
-            <div class="row g-3">
-                {% for member in team_members %}
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        {% if member.image %}
-                        <img src="{{ member.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ member.name }}">
-                        {% endif %}
-                        <div class="card-body text-center">
-                            <h5 class="fw-bold mb-1">{{ member.name }}</h5>
-                            <p class="text-accent small fw-bold mb-2">{{ member.role }}</p>
-                            <p class="small text-muted mb-0">{{ member.bio }}</p>
-                        </div>
-                    </div>
+            <div class="position-relative">
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-light rounded-circle" style="transform: scale(0.9) translate(-20px, 20px); z-index: -1;"></div>
+                
+                <div class="card border-0 shadow-lg overflow-hidden rounded-4">
+                   {% if team_members %}
+                       <img src="{{ team_members.0.image.url }}" class="img-fluid" alt="EmanHomes Team">
+                   {% else %}
+                       <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                           <h4 class="text-muted">Our Team</h4>
+                       </div>
+                   {% endif %}
                 </div>
-                {% empty %}
-                <div class="col-12 text-center text-muted">
-                    <p>Team members will be added soon.</p>
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h6 class="text-accent fw-bold text-uppercase">Our Team</h6>
+            <h2 class="fw-bold" style="color: var(--primary);">Meet the Experts</h2>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for member in team_members %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3 mx-auto overflow-hidden rounded-circle" style="width: 120px; height: 120px;">
+                            {% if member.image %}
+                                <img src="{{ member.image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }}">
+                            {% else %}
+                                <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="fw-bold mb-1">{{ member.name }}</h5>
+                        <p class="text-accent small fw-bold mb-3">{{ member.role }}</p>
+                        <p class="text-muted small">{{ member.bio|truncatewords:20 }}</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">Team members coming soon.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 {% endblock %}
