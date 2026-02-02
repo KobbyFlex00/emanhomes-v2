@@ -40,7 +40,7 @@ class Service(models.Model):
     def __str__(self):
         return self.title
 
-# --- Property (Updated with Realtor.com Status Features) ---
+# --- Property ---
 class Property(models.Model):
     CATEGORY_CHOICES = (
         ('land', 'Land'),
@@ -48,7 +48,6 @@ class Property(models.Model):
         ('commercial', 'Commercial Property'),
     )
     
-    # New: Professional Status Badges
     STATUS_CHOICES = (
         ('for_sale', 'For Sale'),
         ('for_rent', 'For Rent'),
@@ -56,9 +55,10 @@ class Property(models.Model):
     )
     
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, blank=True)
+    # FIX: Increased max_length to 255 to handle long titles
+    slug = models.SlugField(unique=True, blank=True, max_length=255)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale') # New Field
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     location = models.CharField(max_length=200)
     description = models.TextField()
@@ -76,7 +76,7 @@ class Property(models.Model):
     class Meta:
         verbose_name_plural = "Properties"
 
-# --- Contact Message (Database Backup for Emails) ---
+# --- Contact Message ---
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
