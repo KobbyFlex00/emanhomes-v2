@@ -16,13 +16,12 @@
     
     <style>
         :root {
-            /* BRAND COLORS EXTRACTED FROM LOGO */
-            --primary: #001F3F;    /* Deep Navy Blue (Logo Background) */
-            --secondary: #E31C25;  /* Company Red (Building Accent) */
-            --accent: #FF4136;     /* Lighter Red for Hovers */
+            /* BRAND IDENTITY COLORS */
+            --primary: #001F3F;    /* Navy Blue */
+            --secondary: #E31C25;  /* EmanHomes Red */
+            --accent: #B9141B;     /* Darker Red for Hovers */
             --light: #F8F9FA;
             --dark: #2b2b2b;       
-            --text-grey: #696969;  
         }
 
         body {
@@ -33,18 +32,18 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Roboto', sans-serif;
-            font-weight: 400;
-            color: var(--dark);
+            font-weight: 700;
+            color: var(--primary); /* Headings are now Navy by default */
         }
 
-        /* FEATURES & ICONS */
+        /* ICONS */
         .feature-icon {
-            color: var(--secondary); /* Changed to Brand Red */
+            color: var(--secondary); /* Red Icons */
             font-size: 1.1rem;
             margin-right: 0.5rem;
         }
@@ -68,19 +67,32 @@
         }
         
         .nav-link:hover, .nav-link.active {
-            color: var(--secondary) !important; /* Red highlight */
+            color: var(--secondary) !important; /* Red Highlight */
         }
 
-        /* BUTTONS - NOW RED INSTEAD OF GOLD */
+        /* BUTTONS */
         .btn-accent {
-            background-color: var(--secondary); /* Brand Red */
+            background-color: var(--secondary);
             color: white;
             border: none;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
         
         .btn-accent:hover {
-            background-color: var(--accent); /* Lighter Red hover */
+            background-color: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-accent {
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .btn-outline-accent:hover {
+            background-color: var(--secondary);
             color: white;
         }
 
@@ -102,6 +114,7 @@
             color: white;
             text-decoration: none;
             margin-right: 10px;
+            transition: 0.3s;
         }
         
         .social-link:hover {
@@ -110,8 +123,9 @@
         }
         
         /* Utility */
-        .text-accent { color: var(--secondary) !important; } /* Text is now Red */
+        .text-accent { color: var(--secondary) !important; }
         .bg-primary-custom { background-color: var(--primary) !important; }
+        .text-primary-custom { color: var(--primary) !important; }
     </style>
 </head>
 <body>
@@ -183,10 +197,10 @@
                 <div class="col-lg-2 col-md-6">
                     <h5 class="fw-bold mb-3 text-accent">Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50 text-decoration-none">Home</a></li>
-                        <li class="mb-2"><a href="{% url 'about' %}" class="text-white-50 text-decoration-none">About Us</a></li>
-                        <li class="mb-2"><a href="{% url 'properties_list' %}" class="text-white-50 text-decoration-none">Properties</a></li>
-                        <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none">Contact</a></li>
+                        <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50 text-decoration-none hover-white">Home</a></li>
+                        <li class="mb-2"><a href="{% url 'about' %}" class="text-white-50 text-decoration-none hover-white">About Us</a></li>
+                        <li class="mb-2"><a href="{% url 'properties_list' %}" class="text-white-50 text-decoration-none hover-white">Properties</a></li>
+                        <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none hover-white">Contact</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-6">
@@ -206,13 +220,10 @@
                     </ul>
                 </div>
             </div>
-            <hr class="my-4 border-secondary">
+            <hr class="my-4 border-secondary opacity-25">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="mb-0 text-white-50 small">&copy; {% now "Y" %} EmanHomes. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0 text-white-50 small">Designed with <i class="fas fa-heart text-danger"></i> for Real Estate</p>
                 </div>
             </div>
         </div>
