@@ -19,8 +19,8 @@
     </div>
 
     <div class="container text-center position-relative" style="z-index: 2;">
-        <div class="bg-white p-4 rounded-circle shadow-lg d-inline-block mb-4" style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
-            <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes Logo" class="img-fluid" style="max-width: 80%;">
+        <div class="bg-white p-3 rounded-3 shadow-lg d-inline-block mb-4" style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center;">
+            <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes Logo" class="img-fluid" style="max-height: 100%; max-width: 100%;">
         </div>
         
         <h1 class="display-4 fw-bold text-white mb-2">About EmanHomes</h1>
@@ -57,7 +57,7 @@
 
         <div class="col-lg-6">
             <div class="position-relative">
-                <div class="position-absolute top-0 start-0 w-100 h-100 bg-light rounded-circle" style="transform: scale(0.9) translate(-20px, 20px); z-index: -1;"></div>
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-light rounded-4" style="transform: scale(0.9) translate(-20px, 20px); z-index: -1; border: 2px solid var(--secondary);"></div>
                 
                 <div class="card border-0 shadow-lg overflow-hidden rounded-4">
                    {% if team_members %}
