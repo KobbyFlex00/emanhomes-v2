@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EmanHomes{% endblock %} | Premier Real Estate</title>
     
+    <link rel="shortcut icon" href="{% static 'img/logo.jpeg' %}" type="image/jpeg">
+    <link rel="icon" href="{% static 'img/logo.jpeg' %}" type="image/jpeg">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -73,7 +76,7 @@
         }
 
         .fab-whatsapp { background-color: var(--whatsapp); }
-        .fab-phone { background-color: var(--secondary); /* Gold for Phone */ }
+        .fab-phone { background-color: var(--secondary); }
 
         /* NAVBAR STYLING */
         .navbar {
@@ -94,10 +97,10 @@
         }
         
         .nav-link:hover, .nav-link.active {
-            color: var(--accent) !important; /* Bright Gold Hover */
+            color: var(--accent) !important;
         }
 
-        /* BUTTONS (GOLD THEME) */
+        /* BUTTONS */
         .btn-accent {
             background-color: var(--secondary);
             color: white;
@@ -108,7 +111,7 @@
         
         .btn-accent:hover {
             background-color: var(--accent);
-            color: var(--primary); /* Navy text on Gold hover for contrast */
+            color: var(--primary);
             transform: translateY(-2px);
         }
 
@@ -123,7 +126,6 @@
             color: white;
         }
 
-        /* ICONS & TEXT */
         .feature-icon, .text-accent {
             color: var(--secondary) !important;
         }
@@ -162,7 +164,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-                <i class="fas fa-home me-2 text-accent"></i>
+                <img src="{% static 'img/logo.jpeg' %}" alt="Logo" style="height: 30px; margin-right: 10px; border-radius: 4px;">
                 EmanHomes
             </a>
             
