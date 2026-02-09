@@ -16,10 +16,10 @@
     
     <style>
         :root {
-            /* BRAND IDENTITY COLORS */
-            --primary: #001F3F;    /* Navy Blue */
-            --secondary: #E31C25;  /* EmanHomes Red */
-            --accent: #B9141B;     /* Darker Red for Hovers */
+            /* REVERTED TO GOLDEN IDENTITY */
+            --primary: #0D2E59;    /* Deep Navy Blue */
+            --secondary: #B8860B;  /* Dark Gold (Luxury) */
+            --accent: #E5C100;     /* Bright Gold (Highlights) */
             --whatsapp: #25D366;   /* WhatsApp Green */
             --light: #F8F9FA;
             --dark: #2b2b2b;       
@@ -73,7 +73,7 @@
         }
 
         .fab-whatsapp { background-color: var(--whatsapp); }
-        .fab-phone { background-color: var(--primary); }
+        .fab-phone { background-color: var(--secondary); /* Gold for Phone */ }
 
         /* NAVBAR STYLING */
         .navbar {
@@ -94,10 +94,10 @@
         }
         
         .nav-link:hover, .nav-link.active {
-            color: var(--secondary) !important;
+            color: var(--accent) !important; /* Bright Gold Hover */
         }
 
-        /* BUTTONS */
+        /* BUTTONS (GOLD THEME) */
         .btn-accent {
             background-color: var(--secondary);
             color: white;
@@ -108,9 +108,27 @@
         
         .btn-accent:hover {
             background-color: var(--accent);
-            color: white;
+            color: var(--primary); /* Navy text on Gold hover for contrast */
             transform: translateY(-2px);
         }
+
+        .btn-outline-accent {
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .btn-outline-accent:hover {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        /* ICONS & TEXT */
+        .feature-icon, .text-accent {
+            color: var(--secondary) !important;
+        }
+        .bg-primary-custom { background-color: var(--primary) !important; }
+        .text-primary-custom { color: var(--primary) !important; }
 
         /* FOOTER STYLING */
         footer {
@@ -134,13 +152,9 @@
         }
         
         .social-link:hover {
-            background: var(--secondary);
-            color: white;
+            background: var(--accent);
+            color: var(--primary);
         }
-        
-        .text-accent { color: var(--secondary) !important; }
-        .bg-primary-custom { background-color: var(--primary) !important; }
-        .text-primary-custom { color: var(--primary) !important; }
     </style>
 </head>
 <body>
