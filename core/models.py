@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 
-# --- Site Configuration (REAL EmanHomes Defaults) ---
+# --- Site Configuration ---
 class SiteConfiguration(models.Model):
     site_name = models.CharField(max_length=200, default="EmanHomes")
     main_phone = models.CharField(max_length=50, default="+233 20 584 3775")
@@ -55,20 +55,34 @@ class Property(models.Model):
     )
     
     title = models.CharField(max_length=200)
-    # FIX: Increased max_length to 255 to handle long titles
     slug = models.SlugField(unique=True, blank=True, max_length=255)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     location = models.CharField(max_length=200)
     description = models.TextField()
+    
+    # MEDIA FIELDS
     main_image = models.ImageField(upload_to='properties/')
+    video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+    def get_embed_url(self):
+        """
+        Helper to convert standard YouTube links to Embed links.
+        Example: youtube.com/watch?v=XYZ -> youtube.com/embed/XYZ
+        """
+        if self.video_url and "youtube.com/watch?v=" in self.video_url:
+            return self.video_url.replace("watch?v=", "embed/")
+        elif self.video_url and "youtu.be/" in self.video_url:
+            return self.video_url.replace("youtu.be/", "youtube.com/embed/")
+        return self.video_url
 
     def __str__(self):
         return self.title
