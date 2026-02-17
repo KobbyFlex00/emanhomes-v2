@@ -22,17 +22,16 @@ class SiteConfiguration(models.Model):
         verbose_name = "Site Configuration"
         verbose_name_plural = "Site Configuration"
 
-# --- Team Member ---
+# --- Team Member (Updated: Link Only) ---
 class TeamMember(models.Model):
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=100)
     bio = models.TextField()
     
-    # OPTIONAL Upload
-    image = models.ImageField(upload_to='team/', blank=True, null=True)
+    # IMAGE UPLOAD REMOVED
     
-    # NEW: Link Alternative (e.g. LinkedIn profile pic URL)
-    image_url = models.URLField(blank=True, null=True, help_text="Paste a link to a photo (e.g. LinkedIn) if upload fails.")
+    # LINK ONLY
+    image_url = models.URLField(blank=True, null=True, help_text="Paste a link to a photo (e.g. LinkedIn profile pic).")
     
     def __str__(self):
         return self.name
@@ -72,7 +71,7 @@ class Property(models.Model):
     bedrooms = models.IntegerField(default=0, help_text="Number of bedrooms")
     bathrooms = models.IntegerField(default=0, help_text="Number of bathrooms")
 
-    # MEDIA FIELDS (Image is Optional now)
+    # MEDIA FIELDS (Image is Optional)
     main_image = models.ImageField(upload_to='properties/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
     
@@ -84,7 +83,7 @@ class Property(models.Model):
         super().save(*args, **kwargs)
 
     def clean(self):
-        # Validation: Ensure at least one media type is provided
+        # Validation: Must provide either an Image or a Video Link.
         if not self.main_image and not self.video_url:
             raise ValidationError("You must provide either an Image or a Video Link.")
 
