@@ -11,7 +11,7 @@
     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 31, 63, 0.75);"></div>
 
     <div class="container text-center position-relative" style="z-index: 2;">
-        <div class="bg-white p-2 rounded-3 shadow-lg d-inline-block mb-4" style="display: inline-flex; align-items: center; justify-content: center;">
+        <div class="bg-white p-1 rounded-3 shadow-lg d-inline-block mb-4" style="display: inline-flex; align-items: center; justify-content: center;">
             <img src="{% static 'img/logo.jpeg' %}" alt="EmanHomes Logo" style="height: 150px; width: auto; max-width: 100%;">
         </div>
         
@@ -53,7 +53,15 @@
                 
                 <div class="card border-0 shadow-lg overflow-hidden rounded-4">
                    {% if team_members %}
-                       <img src="{{ team_members.0.image.url }}" class="img-fluid" alt="EmanHomes Team">
+                       {% if team_members.0.image %}
+                           <img src="{{ team_members.0.image.url }}" class="img-fluid" alt="EmanHomes Team">
+                       {% elif team_members.0.image_url %}
+                           <img src="{{ team_members.0.image_url }}" class="img-fluid" alt="EmanHomes Team">
+                       {% else %}
+                           <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                               <h4 class="text-muted">Our Team</h4>
+                           </div>
+                       {% endif %}
                    {% else %}
                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
                            <h4 class="text-muted">Our Team</h4>
@@ -77,9 +85,11 @@
             <div class="col-md-4 col-lg-3">
                 <div class="card border-0 shadow-sm h-100 text-center">
                     <div class="card-body p-4">
-                        <div class="mb-3 mx-auto overflow-hidden rounded-circle" style="width: 120px; height: 120px;">
+                        <div class="mb-3 mx-auto overflow-hidden rounded-circle shadow-sm" style="width: 120px; height: 120px;">
                             {% if member.image %}
                                 <img src="{{ member.image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }}">
+                            {% elif member.image_url %}
+                                <img src="{{ member.image_url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }}">
                             {% else %}
                                 <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
                                     <i class="fas fa-user fa-2x"></i>
