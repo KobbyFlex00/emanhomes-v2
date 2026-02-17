@@ -62,6 +62,10 @@ class Property(models.Model):
     location = models.CharField(max_length=200)
     description = models.TextField()
     
+    # NEW FIELDS: Bed & Bath
+    bedrooms = models.IntegerField(default=0, help_text="Number of bedrooms")
+    bathrooms = models.IntegerField(default=0, help_text="Number of bathrooms")
+
     # MEDIA FIELDS
     main_image = models.ImageField(upload_to='properties/')
     video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
@@ -75,13 +79,29 @@ class Property(models.Model):
 
     def get_embed_url(self):
         """
-        Helper to convert standard YouTube links to Embed links.
-        Example: youtube.com/watch?v=XYZ -> youtube.com/embed/XYZ
+        Smartly converts YouTube AND Instagram links to Embed format.
         """
-        if self.video_url and "youtube.com/watch?v=" in self.video_url:
+        if not self.video_url:
+            return None
+            
+        # Handle YouTube
+        if "youtube.com/watch?v=" in self.video_url:
             return self.video_url.replace("watch?v=", "embed/")
-        elif self.video_url and "youtu.be/" in self.video_url:
+        elif "youtu.be/" in self.video_url:
             return self.video_url.replace("youtu.be/", "youtube.com/embed/")
+            
+        # Handle Instagram (Must add /embed to the end)
+        elif "instagram.com/p/" in self.video_url or "instagram.com/reel/" in self.video_url:
+            # Strip query params if any (like ?igsh=...)
+            clean_url = self.video_url.split('?')[0]
+            # Ensure it doesn't already have /embed
+            if not clean_url.endswith('/embed'):
+                if clean_url.endswith('/'):
+                    return clean_url + "embed"
+                else:
+                    return clean_url + "/embed"
+            return clean_url
+            
         return self.video_url
 
     def __str__(self):
