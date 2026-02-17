@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
 
 # --- Site Configuration ---
 class SiteConfiguration(models.Model):
@@ -62,12 +63,12 @@ class Property(models.Model):
     location = models.CharField(max_length=200)
     description = models.TextField()
     
-    # NEW FIELDS: Bed & Bath
+    # BED & BATH
     bedrooms = models.IntegerField(default=0, help_text="Number of bedrooms")
     bathrooms = models.IntegerField(default=0, help_text="Number of bathrooms")
 
-    # MEDIA FIELDS
-    main_image = models.ImageField(upload_to='properties/')
+    # MEDIA FIELDS (Image is now Optional)
+    main_image = models.ImageField(upload_to='properties/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -76,6 +77,12 @@ class Property(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+    def clean(self):
+        # OPTIONAL: This logic ensures you don't post a property with NOTHING.
+        # You must have AT LEAST an image OR a video.
+        if not self.main_image and not self.video_url:
+            raise ValidationError("You must provide either an Image or a Video Link.")
 
     def get_embed_url(self):
         """
@@ -90,11 +97,9 @@ class Property(models.Model):
         elif "youtu.be/" in self.video_url:
             return self.video_url.replace("youtu.be/", "youtube.com/embed/")
             
-        # Handle Instagram (Must add /embed to the end)
+        # Handle Instagram
         elif "instagram.com/p/" in self.video_url or "instagram.com/reel/" in self.video_url:
-            # Strip query params if any (like ?igsh=...)
             clean_url = self.video_url.split('?')[0]
-            # Ensure it doesn't already have /embed
             if not clean_url.endswith('/embed'):
                 if clean_url.endswith('/'):
                     return clean_url + "embed"
