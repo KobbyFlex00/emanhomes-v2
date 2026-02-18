@@ -29,19 +29,19 @@ class TeamMember(models.Model):
     bio = models.TextField()
     
     # Upload field REMOVED. Only URL remains.
-    image_url = models.URLField(help_text="Paste a link to a photo (LinkedIn, Google Drive, etc).")
+    # ADDED 'null=True, blank=True' to fix the Render Crash
+    image_url = models.URLField(blank=True, null=True, help_text="Paste a link to a photo (LinkedIn, Google Drive, etc).")
     
     def save(self, *args, **kwargs):
         # AUTOMATICALLY FIX GOOGLE DRIVE LINKS
         if self.image_url and "drive.google.com" in self.image_url and "/view" in self.image_url:
-            # Extract the ID between /d/ and /view
             try:
-                # This logic grabs the unique ID from the link
+                # Extract the ID between /d/ and /view
                 file_id = self.image_url.split('/d/')[1].split('/')[0]
-                # Convert to a direct embed link that browsers can see
+                # Convert to a direct embed link
                 self.image_url = f"https://drive.google.com/uc?export=view&id={file_id}"
             except IndexError:
-                pass # If format is unexpected, leave it alone
+                pass 
         
         super().save(*args, **kwargs)
 
