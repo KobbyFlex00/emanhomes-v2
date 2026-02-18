@@ -22,17 +22,29 @@ class SiteConfiguration(models.Model):
         verbose_name = "Site Configuration"
         verbose_name_plural = "Site Configuration"
 
-# --- Team Member (Updated: Link Only) ---
+# --- Team Member ---
 class TeamMember(models.Model):
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=100)
     bio = models.TextField()
     
-    # IMAGE UPLOAD REMOVED
+    # Upload field REMOVED. Only URL remains.
+    image_url = models.URLField(help_text="Paste a link to a photo (LinkedIn, Google Drive, etc).")
     
-    # LINK ONLY
-    image_url = models.URLField(blank=True, null=True, help_text="Paste a link to a photo (e.g. LinkedIn profile pic).")
-    
+    def save(self, *args, **kwargs):
+        # AUTOMATICALLY FIX GOOGLE DRIVE LINKS
+        if self.image_url and "drive.google.com" in self.image_url and "/view" in self.image_url:
+            # Extract the ID between /d/ and /view
+            try:
+                # This logic grabs the unique ID from the link
+                file_id = self.image_url.split('/d/')[1].split('/')[0]
+                # Convert to a direct embed link that browsers can see
+                self.image_url = f"https://drive.google.com/uc?export=view&id={file_id}"
+            except IndexError:
+                pass # If format is unexpected, leave it alone
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -83,7 +95,6 @@ class Property(models.Model):
         super().save(*args, **kwargs)
 
     def clean(self):
-        # Validation: Must provide either an Image or a Video Link.
         if not self.main_image and not self.video_url:
             raise ValidationError("You must provide either an Image or a Video Link.")
 

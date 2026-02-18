@@ -1,47 +1,39 @@
 {% extends 'core/base.html' %}
-{% load static %}
 
 {% block title %}About Us{% endblock %}
 
 {% block content %}
 
-<div class="bg-primary-custom py-5 mb-5 text-white">
+<div class="bg-primary-custom py-5 text-white">
     <div class="container text-center">
-        <h1 class="fw-bold animate-up">About EmanHomes</h1>
-        <p class="lead text-white-50 animate-up" style="animation-delay: 0.1s;">Building trust, delivering excellence, and securing your future.</p>
+        <h1 class="fw-bold">About EmanHomes</h1>
+        <p class="lead text-white-50">Building Trust, Delivering Excellence in Ghanaian Real Estate.</p>
     </div>
 </div>
 
-<div class="container mb-5">
+<div class="container my-5">
     <div class="row g-5 align-items-center">
         <div class="col-lg-6">
-            <h2 class="fw-bold text-primary-custom mb-4">Who We Are</h2>
-            <p class="text-secondary lead">EmanHomes is a premier real estate consultancy dedicated to providing litigation-free lands and luxury homes in Ghana's most sought-after locations.</p>
-            <p class="text-secondary">Founded on principles of integrity and transparency, we help investors and families navigate the Accra real estate market with confidence. Whether you are looking for a serviced plot in East Legon Hills or a turnkey mansion in Trasacco, we are your trusted partner.</p>
-            
-            <div class="row mt-4 g-4">
-                <div class="col-6">
-                    <h1 class="fw-bold text-accent display-4">50+</h1>
-                    <p class="text-muted small">Properties Sold</p>
-                </div>
-                <div class="col-6">
-                    <h1 class="fw-bold text-accent display-4">100%</h1>
-                    <p class="text-muted small">Happy Clients</p>
+            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded shadow" alt="About Building">
+        </div>
+        <div class="col-lg-6">
+            <h6 class="text-accent fw-bold text-uppercase">Who We Are</h6>
+            <h2 class="fw-bold text-primary-custom mb-4">Your Gateway to Litigation-Free Property</h2>
+            <p class="text-muted mb-4">
+                At EmanHomes, we understand that buying land or a home is one of the most significant investments you will ever make. Our mission is to eliminate the stress and risk associated with property acquisition in Ghana.
+            </p>
+            <div class="d-flex mb-3">
+                <i class="fas fa-check-circle text-accent mt-1 me-3"></i>
+                <div>
+                    <h5 class="fw-bold">Litigation-Free Guarantee</h5>
+                    <p class="text-muted small">We conduct rigorous due diligence on every property.</p>
                 </div>
             </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="position-relative">
-                <div class="position-absolute top-0 start-0 w-100 h-100 bg-light rounded-4" style="transform: scale(0.9) translate(-20px, 20px); z-index: -1; border: 2px solid var(--secondary);"></div>
-                
-                <div class="card border-0 shadow-lg overflow-hidden rounded-4">
-                   <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
-                        <div class="text-center">
-                            <i class="fas fa-users fa-4x text-accent mb-3"></i>
-                            <h4 class="text-muted">Our Team</h4>
-                        </div>
-                   </div>
+            <div class="d-flex mb-3">
+                <i class="fas fa-check-circle text-accent mt-1 me-3"></i>
+                <div>
+                    <h5 class="fw-bold">Transparency & Integrity</h5>
+                    <p class="text-muted small">No hidden fees, no ambiguous terms. Just honest business.</p>
                 </div>
             </div>
         </div>
@@ -51,29 +43,31 @@
 <div class="bg-light py-5">
     <div class="container">
         <div class="text-center mb-5">
-            <h6 class="text-accent fw-bold text-uppercase">Leadership</h6>
-            <h2 class="fw-bold text-primary-custom">Meet Our Team</h2>
+            <h6 class="text-accent fw-bold text-uppercase">Our Team</h6>
+            <h2 class="fw-bold text-primary-custom">Meet the Experts</h2>
         </div>
-
-        <div class="row g-4 justify-content-center">
+        
+        <div class="row justify-content-center">
             {% for member in team_members %}
-            <div class="col-md-4 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 text-center py-4 team-card">
-                    <div class="card-body">
-                        <div class="mb-3 mx-auto overflow-hidden rounded-circle shadow-sm" style="width: 120px; height: 120px;">
-                            {% if member.image_url %}
-                                <img src="{{ member.image_url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }}">
-                            {% else %}
-                                <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
-                                    <i class="fas fa-user fa-3x"></i>
-                                </div>
-                            {% endif %}
-                        </div>
+            <div class="col-md-4 text-center mb-5">
+                <div class="bg-white p-4 h-100 shadow-sm border-0 rounded">
+                    <div class="mx-auto mb-4 rounded-circle shadow-sm overflow-hidden position-relative" 
+                         style="width: 150px; height: 150px; border: 4px solid #fff;">
                         
-                        <h5 class="fw-bold mb-1">{{ member.name }}</h5>
-                        <p class="text-accent small fw-bold mb-3">{{ member.role }}</p>
-                        <p class="text-muted small mb-0">{{ member.bio }}</p>
+                        {% if member.image_url %}
+                            <img src="{{ member.image_url }}" 
+                                 alt="{{ member.name }}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                <i class="fas fa-user fa-3x"></i>
+                            </div>
+                        {% endif %}
+                        
                     </div>
+                    <h5 class="fw-bold text-primary-custom mb-1">{{ member.name }}</h5>
+                    <p class="text-accent small fw-bold text-uppercase mb-3">{{ member.role }}</p>
+                    <p class="text-muted small">{{ member.bio }}</p>
                 </div>
             </div>
             {% empty %}
@@ -84,10 +78,4 @@
         </div>
     </div>
 </div>
-
-<style>
-    .team-card { transition: transform 0.3s ease; }
-    .team-card:hover { transform: translateY(-5px); }
-</style>
-
 {% endblock %}
