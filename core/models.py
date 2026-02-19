@@ -27,15 +27,8 @@ class TeamMember(models.Model):
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=100)
     bio = models.TextField()
-    
-    # REMOVED THE UPLOAD FIELD. Using only URL.
-    # IMPORTANT: Use a direct image link ending in .jpg or .png (e.g., from Imgur, Postimages, or LinkedIn).
-    # Do NOT use standard Google Drive sharing links.
     image_url = models.URLField(blank=True, null=True, help_text="Paste a direct link to a .jpg/.png photo (e.g., Right-click LinkedIn photo > Copy Image Address). Google Drive 'view' links will NOT work.")
     
-    # Removed the complicated save() method that was failing with Google Drive links.
-    # We will rely on direct, clean URLs now.
-
     def __str__(self):
         return self.name
 
@@ -61,12 +54,22 @@ class Property(models.Model):
         ('for_rent', 'For Rent'),
         ('sold', 'Sold'),
     )
+
+    # NEW: CURRENCY CHOICES
+    CURRENCY_CHOICES = (
+        ('USD', 'USD ($)'),
+        ('GHS', 'GHS (GH₵)'),
+    )
     
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, max_length=255)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale')
+    
+    # CURRENCY FIELD ADDED HERE
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
     price = models.DecimalField(max_digits=12, decimal_places=2)
+    
     location = models.CharField(max_length=200)
     description = models.TextField()
     
@@ -74,7 +77,7 @@ class Property(models.Model):
     bedrooms = models.IntegerField(default=0, help_text="Number of bedrooms")
     bathrooms = models.IntegerField(default=0, help_text="Number of bathrooms")
 
-    # MEDIA FIELDS (Image is Optional)
+    # MEDIA FIELDS
     main_image = models.ImageField(upload_to='properties/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
     
@@ -89,20 +92,20 @@ class Property(models.Model):
         if not self.main_image and not self.video_url:
             raise ValidationError("You must provide either an Image or a Video Link.")
 
+    @property
+    def currency_symbol(self):
+        """Returns the correct symbol based on the selected currency."""
+        return 'GH₵' if self.currency == 'GHS' else '$'
+
     def get_embed_url(self):
-        """
-        Smartly converts YouTube AND Instagram links to Embed format.
-        """
         if not self.video_url:
             return None
             
-        # Handle YouTube
         if "youtube.com/watch?v=" in self.video_url:
             return self.video_url.replace("watch?v=", "embed/")
         elif "youtu.be/" in self.video_url:
             return self.video_url.replace("youtu.be/", "youtube.com/embed/")
             
-        # Handle Instagram
         elif "instagram.com/p/" in self.video_url or "instagram.com/reel/" in self.video_url:
             clean_url = self.video_url.split('?')[0]
             if not clean_url.endswith('/embed'):
