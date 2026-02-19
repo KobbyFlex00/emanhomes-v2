@@ -28,22 +28,13 @@ class TeamMember(models.Model):
     role = models.CharField(max_length=100)
     bio = models.TextField()
     
-    # Upload field REMOVED. Only URL remains.
-    # ADDED 'null=True, blank=True' to fix the Render Crash
-    image_url = models.URLField(blank=True, null=True, help_text="Paste a link to a photo (LinkedIn, Google Drive, etc).")
+    # REMOVED THE UPLOAD FIELD. Using only URL.
+    # IMPORTANT: Use a direct image link ending in .jpg or .png (e.g., from Imgur, Postimages, or LinkedIn).
+    # Do NOT use standard Google Drive sharing links.
+    image_url = models.URLField(blank=True, null=True, help_text="Paste a direct link to a .jpg/.png photo (e.g., Right-click LinkedIn photo > Copy Image Address). Google Drive 'view' links will NOT work.")
     
-    def save(self, *args, **kwargs):
-        # AUTOMATICALLY FIX GOOGLE DRIVE LINKS
-        if self.image_url and "drive.google.com" in self.image_url and "/view" in self.image_url:
-            try:
-                # Extract the ID between /d/ and /view
-                file_id = self.image_url.split('/d/')[1].split('/')[0]
-                # Convert to a direct embed link
-                self.image_url = f"https://drive.google.com/uc?export=view&id={file_id}"
-            except IndexError:
-                pass 
-        
-        super().save(*args, **kwargs)
+    # Removed the complicated save() method that was failing with Google Drive links.
+    # We will rely on direct, clean URLs now.
 
     def __str__(self):
         return self.name
