@@ -1,3 +1,4 @@
+from django.conf import settings
 from .models import SiteConfiguration
 
 def site_configuration(request):
@@ -11,4 +12,7 @@ def site_configuration(request):
     except Exception:
         config = None
         
-    return {'site_config': config}
+    return {
+        'site_config': config,
+        'analytics_measurement_id': getattr(settings, 'ANALYTICS_MEASUREMENT_ID', ''),
+    }

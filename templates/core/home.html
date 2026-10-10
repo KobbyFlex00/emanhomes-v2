@@ -1,7 +1,8 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
 
-{% block title %}Welcome{% endblock %}
+{% block title %}Trusted Real Estate Partner in Accra{% endblock %}
+{% block meta_description %}Find premium homes, land and commercial property in East Legon and Greater Accra with EmanHomes. Speak to a property specialist today.{% endblock %}
 
 {% block content %}
 
@@ -9,13 +10,13 @@
     <div id="heroCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-interval="5000">
         <div class="carousel-inner h-100">
             <div class="carousel-item active h-100">
-                <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Villa Modern">
+                <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Villa Modern" fetchpriority="high">
             </div>
             <div class="carousel-item h-100">
-                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Pool Estate">
+                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Pool Estate" loading="lazy">
             </div>
             <div class="carousel-item h-100">
-                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Modern Estate Balcony">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Modern Estate Balcony" loading="lazy">
             </div>
         </div>
     </div>
@@ -27,7 +28,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <h1 class="display-3 fw-bold mb-4 text-accent animate-up">The #1 Real Estate Partner Investors Trust</h1>
-                    <p class="lead fs-4 mb-5 text-light animate-up-delay">Secure, litigation-free lands and premium homes in East Legon & Greater Accra.</p>
+                    <p class="lead fs-4 mb-5 text-light animate-up-delay">Clear guidance, carefully selected properties and responsive support for your next move in Greater Accra.</p>
                 </div>
             </div>
 
@@ -42,7 +43,7 @@
                         </select>
                     </div>
                     <div class="col-md-7">
-                        <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control border-0 bg-light py-3" placeholder="Search Location (e.g. East Legon Hills)">
+                        <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control border-0 bg-light py-3" placeholder="Search location, property or area">
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-accent w-100 py-3 fw-bold"><i class="fas fa-search me-2"></i> Search</button>
@@ -66,7 +67,7 @@
                 <div class="card border-0 shadow-sm h-100 overflow-hidden property-card">
                     <div class="position-relative">
                         {% if property.main_image %}
-                            <img src="{{ property.main_image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ property.title }}">
+                            <img src="{{ property.main_image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ property.title }}" loading="lazy">
                         {% elif property.video_url %}
                             <div style="height: 250px; background: #000; overflow: hidden;">
                                 <iframe src="{{ property.get_embed_url }}" title="{{ property.title }}" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
@@ -82,11 +83,12 @@
                     <div class="card-body p-4">
                         <h5 class="card-title fw-bold mb-1 text-primary-custom">{{ property.title|truncatechars:35 }}</h5>
                         <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1 text-accent"></i> {{ property.location }}</p>
+                        {% if property.reference_number %}<p class="text-muted mb-2" style="font-size:.75rem;">Ref: {{ property.reference_number }}</p>{% endif %}
                         
                         <h5 class="text-accent fw-bold mb-3">{{ property.currency_symbol }}{{ property.price|intcomma }}</h5>
                         
                         <div class="d-grid">
-                            <a href="{% url 'property_detail' property.slug %}" class="btn btn-outline-primary btn-sm rounded-pill" style="border-color: var(--primary); color: var(--primary);">View Details</a>
+                            <a href="{% url 'property_detail' property.slug %}" data-analytics-event="property_view" class="btn btn-outline-primary btn-sm rounded-pill" style="border-color: var(--primary); color: var(--primary);">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -101,6 +103,35 @@
         
         <div class="text-center mt-5">
             <a href="{% url 'properties_list' %}" class="btn btn-outline-dark px-5 py-2 rounded-pill">Browse All Properties</a>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-4">
+                <p class="text-accent fw-bold text-uppercase mb-2">How we help</p>
+                <h2 class="fw-bold text-primary-custom">A clearer way to make your next property move.</h2>
+                <p class="text-muted">Whether you are buying, renting or bringing a property to market, our team helps you move from first conversation to next step with practical guidance.</p>
+                <a href="{% url 'contact' %}" class="btn btn-accent rounded-pill px-4">Speak to a specialist</a>
+            </div>
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="p-4 h-100 border rounded-3"><i class="fas fa-search feature-icon fa-2x mb-3"></i><h3 class="h5">Find the right fit</h3><p class="small text-muted mb-0">Search by location, type, status and budget, then ask for the details that matter.</p></div></div>
+                    <div class="col-md-4"><div class="p-4 h-100 border rounded-3"><i class="fas fa-comments feature-icon fa-2x mb-3"></i><h3 class="h5">Get responsive support</h3><p class="small text-muted mb-0">Choose WhatsApp, phone or email and tell us how you prefer to continue.</p></div></div>
+                    <div class="col-md-4"><div class="p-4 h-100 border rounded-3"><i class="fas fa-file-signature feature-icon fa-2x mb-3"></i><h3 class="h5">Move with clarity</h3><p class="small text-muted mb-0">Understand the next steps, documents and decisions before committing.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-primary-custom text-white">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8"><h2 class="fw-bold text-white">Have a property to sell or lease?</h2><p class="text-white-50 mb-0">Share a few details and let EmanHomes help you understand the best next step for your property.</p></div>
+            <div class="col-lg-4 text-lg-end"><a href="{% url 'contact' %}?type=listing" class="btn btn-accent rounded-pill px-4">Request a property consultation</a></div>
         </div>
     </div>
 </section>

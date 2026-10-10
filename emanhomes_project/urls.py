@@ -5,6 +5,37 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from django.http import HttpResponse
+from django.urls import reverse
+from django.contrib.sitemaps import Sitemap
+from core.models import Property
+from django.utils import timezone
+
+
+class StaticSitemap(Sitemap):
+    priority = 0.8
+    changefreq = 'weekly'
+
+    def items(self):
+        return ['home', 'about', 'properties_list', 'contact']
+
+    def location(self, item):
+        return reverse(item)
+
+
+class PropertySitemap(Sitemap):
+    changefreq = 'daily'
+    priority = 0.9
+
+    def items(self):
+        return Property.objects.all()
+
+    def lastmod(self, item):
+        return item.created_at
+
+    def location(self, item):
+        return reverse('property_detail', kwargs={'slug': item.slug})
 
 from core.views import home, property_detail, contact, about, properties_list
 
@@ -15,6 +46,11 @@ urlpatterns = [
     path('properties/', properties_list, name='properties_list'),
     path('property/<slug:slug>/', property_detail, name='property_detail'),
     path('contact/', contact, name='contact'),
+    path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap}}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', lambda request: HttpResponse(
+        f"User-agent: *\nAllow: /\nSitemap: {request.build_absolute_uri(reverse('django.contrib.sitemaps.views.sitemap'))}\n",
+        content_type='text/plain'
+    )),
 ]
 
 # This ensures media files work correctly in debug mode

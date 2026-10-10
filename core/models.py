@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+from uuid import uuid4
 
 # --- Site Configuration ---
 class SiteConfiguration(models.Model):
@@ -63,8 +64,10 @@ class Property(models.Model):
     
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, max_length=255)
+    reference_number = models.CharField(max_length=30, unique=True, blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale')
+    is_featured = models.BooleanField(default=False)
     
     # CURRENCY FIELD ADDED HERE
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
@@ -72,6 +75,9 @@ class Property(models.Model):
     
     location = models.CharField(max_length=200)
     description = models.TextField()
+    property_size = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    property_size_unit = models.CharField(max_length=20, blank=True, default='sq ft')
+    amenities = models.TextField(blank=True, help_text="One amenity per line")
     
     # BED & BATH
     bedrooms = models.IntegerField(default=0, help_text="Number of bedrooms")
@@ -86,6 +92,8 @@ class Property(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if not self.reference_number:
+            self.reference_number = f"EH-{uuid4().hex[:10].upper()}"
         super().save(*args, **kwargs)
 
     def clean(self):
@@ -125,11 +133,52 @@ class Property(models.Model):
 
 # --- Contact Message ---
 class ContactMessage(models.Model):
+    LEAD_STATUS_CHOICES = (
+        ('new', 'New'),
+        ('in_progress', 'In progress'),
+        ('qualified', 'Qualified'),
+        ('closed', 'Closed'),
+    )
+    INQUIRY_CHOICES = (
+        ('general', 'General enquiry'),
+        ('property', 'Property enquiry'),
+        ('viewing', 'Request a viewing'),
+        ('listing', 'List or sell a property'),
+    )
+    CONTACT_METHOD_CHOICES = (
+        ('whatsapp', 'WhatsApp'),
+        ('phone', 'Phone'),
+        ('email', 'Email'),
+    )
+
     name = models.CharField(max_length=100)
     email = models.EmailField()
     subject = models.CharField(max_length=200, default="New Inquiry")
     message = models.TextField()
+    inquiry_type = models.CharField(max_length=20, choices=INQUIRY_CHOICES, default='general')
+    preferred_contact = models.CharField(max_length=20, choices=CONTACT_METHOD_CHOICES, default='email')
+    property = models.ForeignKey(
+        Property, on_delete=models.SET_NULL, blank=True, null=True, related_name='inquiries'
+    )
+    source = models.CharField(max_length=100, blank=True)
+    consent_to_contact = models.BooleanField(default=True)
+    lead_status = models.CharField(max_length=20, choices=LEAD_STATUS_CHOICES, default='new')
+    follow_up_at = models.DateTimeField(blank=True, null=True)
+    internal_notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Message from {self.name}"
+
+
+class PropertyImage(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='gallery')
+    image = models.ImageField(upload_to='properties/gallery/')
+    caption = models.CharField(max_length=200, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ('display_order', 'id')
+
+    def __str__(self):
+        return f"{self.property.title} image"

@@ -11,12 +11,22 @@ import cloudinary.api
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-local-key')
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'local-only-change-this-key-8f3c4c7f7d1f4a2a9d6e5b1c0a7f2e9d',
+)
 
 # SECURITY: Must be False in production
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [host for host in os.environ.get(
+    'ALLOWED_HOSTS', 'localhost,127.0.0.1,emanhomes.com,www.emanhomes.com'
+).split(',') if host]
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.environ.get(
+        'CSRF_TRUSTED_ORIGINS', 'https://emanhomes.com,https://www.emanhomes.com'
+    ).split(',') if origin
+]
 
 INSTALLED_APPS = [
     'cloudinary_storage',
@@ -112,3 +122,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'emanpages@gmail.com'
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+LEAD_NOTIFICATION_EMAIL = os.environ.get('LEAD_NOTIFICATION_EMAIL', EMAIL_HOST_USER)
+ANALYTICS_MEASUREMENT_ID = os.environ.get('ANALYTICS_MEASUREMENT_ID', '')
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'

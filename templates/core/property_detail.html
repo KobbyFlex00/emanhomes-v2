@@ -1,7 +1,8 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
 
-{% block title %}Property Details{% endblock %}
+{% block title %}{{ property.title }} in {{ property.location }}{% endblock %}
+{% block meta_description %}{{ property.title }} in {{ property.location }} — {{ property.get_status_display }} at {{ property.currency_symbol }}{{ property.price|intcomma }}. Contact EmanHomes to arrange a viewing.{% endblock %}
 
 {% block content %}
 <div class="bg-white border-bottom py-3">
@@ -19,6 +20,7 @@
             <div class="mb-4">
                 <h1 class="fw-light mb-2" style="font-size: 2.2rem; color: #2b2b2b;">{{ property.title }}</h1>
                 <p class="text-muted fs-5 mb-3">{{ property.location }}</p>
+                {% if property.reference_number %}<p class="small text-muted mb-3">Property reference: <strong>{{ property.reference_number }}</strong></p>{% endif %}
                 
                 <div class="d-flex align-items-center mb-4">
                     {% if property.bedrooms > 0 %}
@@ -50,8 +52,18 @@
             <div class="position-relative mb-4 rounded overflow-hidden shadow-sm">
                 {% if property.video_url %}
                     <div class="ratio ratio-16x9">
-                        <iframe src="{{ property.get_embed_url }}" title="Property Video" allowfullscreen style="border:0;"></iframe>
+                        <iframe loading="lazy" src="{{ property.get_embed_url }}" title="Property Video" allowfullscreen style="border:0;"></iframe>
                     </div>
+
+                    {% if property.gallery.all %}
+                    <div class="row g-2 mb-4">
+                        {% for gallery_image in property.gallery.all %}
+                        <div class="col-4">
+                            <img src="{{ gallery_image.image.url }}" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{{ gallery_image.caption|default:property.title }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 {% elif property.main_image %}
                     <img src="{{ property.main_image.url }}" class="img-fluid w-100" style="max-height: 500px; object-fit: cover;" alt="{{ property.title }}">
                 {% else %}
@@ -69,6 +81,12 @@
             <h4 class="fw-bold mb-3 mt-5 text-primary-custom">Property Details</h4>
             <div class="p-4 bg-light rounded border-0">
                 <p class="text-secondary" style="white-space: pre-line; font-size: 1.05rem;">{{ property.description }}</p>
+                {% if property.property_size or property.amenities %}
+                <div class="row g-3 mt-2">
+                    {% if property.property_size %}<div class="col-sm-6"><strong>Size</strong><br><span class="text-muted">{{ property.property_size|floatformat:0 }} {{ property.property_size_unit }}</span></div>{% endif %}
+                    {% if property.amenities %}<div class="col-sm-6"><strong>Features</strong><br><span class="text-muted">{{ property.amenities|linebreaksbr }}</span></div>{% endif %}
+                </div>
+                {% endif %}
             </div>
 
             <div class="card bg-white border shadow-sm p-4 mt-5">
@@ -108,7 +126,7 @@
                 <div class="card-body p-4">
                     <p class="text-muted small mb-4">Interested in this property? Send us a message and we will get back to you shortly.</p>
                     
-                    <form action="{% url 'contact' %}" method="post">
+                    <form action="{% url 'contact' %}?property={{ property.slug }}" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="subject" value="Inquiry about {{ property.title }}">
                         <div class="mb-3">
@@ -120,8 +138,21 @@
                         <div class="mb-3">
                             <textarea name="message" class="form-control bg-light border-0" rows="3" placeholder="I am interested in..." required>I am interested in {{ property.title }} located at {{ property.location }}.</textarea>
                         </div>
-                        <button type="submit" class="btn btn-accent w-100 fw-bold py-2">Send Message</button>
+                        <div class="mb-3">
+                            <select name="preferred_contact" class="form-select bg-light border-0" aria-label="Preferred contact method">
+                                <option value="whatsapp">Preferred contact: WhatsApp</option>
+                                <option value="phone">Preferred contact: Phone</option>
+                                <option value="email">Preferred contact: Email</option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="inquiry_type" value="property">
+                        <input type="hidden" name="consent_to_contact" value="on">
+                        <button type="submit" data-analytics-event="inquiry_submit" class="btn btn-accent w-100 fw-bold py-2">Send Message</button>
                     </form>
+                    <a class="btn btn-success w-100 fw-bold mt-2" target="_blank" rel="noopener" data-analytics-event="whatsapp_click"
+                       href="https://wa.me/233205843775?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
+                        <i class="fab fa-whatsapp me-2"></i> Ask on WhatsApp
+                    </a>
                     
                     <div class="text-center mt-4">
                         <p class="text-muted small mb-2">Or call us directly:</p>
@@ -130,6 +161,22 @@
                         </a>
                     </div>
                 </div>
+
+                {% if related_properties %}
+                <section class="container mb-5">
+                    <h2 class="h4 fw-bold text-primary-custom mb-4">You may also like</h2>
+                    <div class="row g-4">
+                        {% for related in related_properties %}
+                        <div class="col-md-4">
+                            <a href="{% url 'property_detail' related.slug %}" class="card h-100 border-0 shadow-sm text-decoration-none property-card">
+                                {% if related.main_image %}<img src="{{ related.main_image.url }}" class="card-img-top" style="height:180px;object-fit:cover" alt="{{ related.title }}">{% endif %}
+                                <div class="card-body"><h3 class="h6 text-primary-custom">{{ related.title }}</h3><p class="small text-muted mb-0">{{ related.location }} · {{ related.currency_symbol }}{{ related.price|intcomma }}</p></div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
             </div>
         </div>
     </div>
