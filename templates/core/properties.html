@@ -5,14 +5,14 @@
 {% block meta_description %}Browse EmanHomes property listings across East Legon and Greater Accra. Filter homes, land and commercial opportunities by price, status and bedrooms.{% endblock %}
 
 {% block content %}
-<div class="bg-primary-custom py-5 text-white mb-5">
+<div class="bg-primary-custom py-5 text-white mb-5 reveal-on-scroll">
     <div class="container text-center">
         <h1 class="fw-bold">Our Properties</h1>
         <p class="lead text-white-50">Browse our latest listings in East Legon and Greater Accra.</p>
     </div>
 </div>
 
-<div class="container mb-5">
+<div class="container mb-5 reveal-on-scroll">
     <div class="bg-white p-4 rounded shadow-sm border">
         <form action="{% url 'properties_list' %}" method="get" class="row g-3">
             <div class="col-md-2">
@@ -51,7 +51,7 @@
 <div class="container mb-5">
     <div class="row g-4">
         {% for property in properties %}
-        <div class="col-md-4">
+        <div class="col-md-4 reveal-on-scroll">
             <div class="card border-0 shadow-sm h-100 overflow-hidden property-card">
                 <div class="position-relative">
                     {% if property.main_image %}

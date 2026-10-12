@@ -25,6 +25,7 @@
     
     <link rel="shortcut icon" href="{% static 'img/logo.jpeg' %}" type="image/jpeg">
     <link rel="icon" href="{% static 'img/logo.jpeg' %}" type="image/jpeg">
+    <link rel="stylesheet" href="{% static 'css/eman-interactions.css' %}">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -190,7 +191,7 @@
         .btn-primary-custom { background: var(--primary); color: #fff; border: 0; }
         .btn-primary-custom:hover { background: #071d38; color: #fff; }
         .eyebrow { letter-spacing: .16em; text-transform: uppercase; font-size: .72rem; font-weight: 700; }
-        .edge-hero { position: relative; min-height: 590px; display: flex; align-items: center; background: var(--primary); }
+        .edge-hero { position: relative; min-height: 590px; display: flex; align-items: center; background: linear-gradient(110deg, rgba(7,29,56,.97), rgba(13,46,89,.42)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=85') center/cover; }
         .edge-hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,29,56,.8), transparent 75%); }
         .edge-hero h1 { max-width: 760px; line-height: 1.03; letter-spacing: -.03em; }
         .edge-hero h1 em { color: var(--accent); font-style: normal; }
@@ -203,7 +204,9 @@
         .edge-intents a.active, .edge-intents a:hover { background: var(--primary); color: #fff; }
         .edge-quick-links a { background: #fff; border: 1px solid #e4e8ed; border-radius: 50px; color: var(--primary); font-size: .82rem; padding: .6rem .9rem; text-decoration: none; }
         .edge-quick-links a:hover { border-color: var(--secondary); color: var(--secondary); }
-        .category-tile { min-height: 180px; padding: 1.5rem; border-radius: 12px; color: #fff; display: flex; align-items: end; justify-content: space-between; text-decoration: none; background: var(--primary); background-position: center; background-size: cover; transition: transform .25s ease, box-shadow .25s ease; }
+        .category-tile { min-height: 180px; padding: 1.5rem; border-radius: 12px; color: #fff; display: flex; align-items: end; justify-content: space-between; text-decoration: none; background: linear-gradient(135deg, rgba(13,46,89,.94), rgba(13,46,89,.55)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=75') center/cover; transition: transform .25s ease, box-shadow .25s ease; }
+        .category-tile.category-land { background-image: linear-gradient(135deg, rgba(13,46,89,.93), rgba(13,46,89,.5)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=75'); }
+        .category-tile.category-commercial { background-image: linear-gradient(135deg, rgba(13,46,89,.93), rgba(13,46,89,.5)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=75'); }
         .category-tile:hover { color: #fff; transform: translateY(-4px); box-shadow: 0 12px 28px rgba(7,29,56,.18); }
         .category-tile h3 { color: #fff; margin: .9rem 0 .15rem; }
         .category-tile p { color: rgba(255,255,255,.75); margin: 0; }
@@ -350,6 +353,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/eman-interactions.js' %}" defer></script>
     {% if analytics_measurement_id %}
     <script>
         document.querySelectorAll('[data-analytics-event]').forEach(function (element) {

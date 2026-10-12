@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<div class="container my-5">
+<div class="container my-5 reveal-on-scroll">
     <div class="row g-5">
         
         <div class="col-lg-8">
@@ -89,7 +89,7 @@
                 {% endif %}
             </div>
 
-            <div class="card bg-white border shadow-sm p-4 mt-5">
+            <div class="card bg-white border shadow-sm p-4 mt-5 reveal-on-scroll">
                 <h4 class="fw-bold mb-3"><i class="fas fa-calculator me-2 text-primary-custom"></i>Payment Calculator</h4>
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -150,7 +150,7 @@
                         <button type="submit" data-analytics-event="inquiry_submit" class="btn btn-accent w-100 fw-bold py-2">Send Message</button>
                     </form>
                     <a class="btn btn-success w-100 fw-bold mt-2" target="_blank" rel="noopener" data-analytics-event="whatsapp_click"
-                       href="https://wa.me/{{ site_config.whatsapp_phone|default:'233205843775'|cut:' '|cut:'+' }}?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
+                       href="https://wa.me/233205843775?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
                         <i class="fab fa-whatsapp me-2"></i> Ask on WhatsApp
                     </a>
                     
@@ -163,7 +163,7 @@
                 </div>
 
                 {% if related_properties %}
-                <section class="container mb-5">
+                <section class="container mb-5 reveal-on-scroll">
                     <h2 class="h4 fw-bold text-primary-custom mb-4">You may also like</h2>
                     <div class="row g-4">
                         {% for related in related_properties %}

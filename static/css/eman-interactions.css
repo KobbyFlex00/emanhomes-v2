@@ -1,0 +1,69 @@
+:root {
+    --motion-ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+html { scroll-behavior: smooth; }
+.edge-hero--carousel { min-height: 650px; overflow: hidden; isolation: isolate; }
+.edge-hero__slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    background-position: center;
+    background-size: cover;
+    opacity: 0;
+    transform: scale(1.06);
+    transition: opacity .8s ease, transform 6s var(--motion-ease);
+    z-index: -2;
+}
+.edge-hero__slide.is-active { opacity: 1; transform: scale(1); z-index: -1; }
+.edge-hero__slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,29,56,.93), rgba(7,29,56,.28) 70%, rgba(7,29,56,.5)); }
+.edge-hero__content { position: relative; z-index: 1; }
+.hero-progress { position: absolute; bottom: 2.2rem; right: 0; z-index: 2; display: flex; gap: .55rem; }
+.hero-progress button { width: 42px; height: 4px; padding: 0; border: 0; background: rgba(255,255,255,.4); transition: background .3s, width .3s; }
+.hero-progress button.is-active { width: 72px; background: var(--accent); }
+.hero-orbit {
+    position: absolute; right: 9%; bottom: 11%; z-index: 2; width: 142px; height: 142px;
+    border: 1px solid rgba(255,255,255,.75); border-radius: 50%; display: grid; place-items: center;
+    color: #fff; font-size: .62rem; letter-spacing: .25em; text-transform: uppercase; animation: orbit 18s linear infinite;
+}
+.hero-orbit::before { content: "\f095"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 1.4rem; letter-spacing: 0; animation: counter-orbit 18s linear infinite; }
+.hero-orbit span { position: absolute; white-space: nowrap; }
+.carousel-shell { position: relative; }
+.carousel-track { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: .35rem .15rem 1rem; }
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track > * { flex: 0 0 calc((100% - 2.5rem) / 3); scroll-snap-align: start; }
+.carousel-control {
+    width: 42px; height: 42px; border: 1px solid #dce2e8; border-radius: 50%; background: #fff; color: var(--primary);
+    transition: all .25s ease; box-shadow: 0 5px 15px rgba(7,29,56,.08);
+}
+.carousel-control:hover { border-color: var(--secondary); color: var(--secondary); transform: translateY(-2px); }
+.carousel-control:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+.category-carousel .category-tile { min-height: 210px; }
+.reveal-on-scroll { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--motion-ease), transform .7s var(--motion-ease); }
+.reveal-on-scroll.is-visible { opacity: 1; transform: none; }
+.listing-card, .category-tile { will-change: transform; }
+.counter-value { font-variant-numeric: tabular-nums; }
+.mobile-action-bar { display: none; }
+@keyframes orbit { to { transform: rotate(360deg); } }
+@keyframes counter-orbit { to { transform: rotate(-360deg); } }
+@media (max-width: 991px) {
+    .edge-hero--carousel { min-height: 600px; }
+    .carousel-track > * { flex-basis: calc((100% - 1.25rem) / 2); }
+    .hero-orbit { right: 5%; bottom: 8%; transform: scale(.8); }
+}
+@media (max-width: 575px) {
+    .edge-hero--carousel { min-height: 610px; }
+    .edge-hero__slide::after { background: linear-gradient(90deg, rgba(7,29,56,.91), rgba(7,29,56,.5)); }
+    .carousel-track > * { flex-basis: 88%; }
+    .hero-orbit { display: none; }
+    .hero-progress { right: 1rem; bottom: 1.3rem; }
+    .mobile-action-bar { position: fixed; display: flex; left: 1rem; right: 1rem; bottom: 1rem; z-index: 1000; padding: .45rem; gap: .4rem; background: rgba(7,29,56,.94); border-radius: 999px; box-shadow: 0 10px 30px rgba(7,29,56,.25); }
+    .mobile-action-bar a { flex: 1; color: #fff; text-align: center; text-decoration: none; font-size: .75rem; padding: .55rem .35rem; border-radius: 999px; }
+    .mobile-action-bar a:first-child { background: var(--accent); color: var(--primary); }
+    footer { padding-bottom: 6rem !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
