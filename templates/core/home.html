@@ -5,7 +5,7 @@
 {% block meta_description %}Explore homes, land and commercial property in Greater Accra with EmanHomes Limited. Search verified details and speak directly with our property team.{% endblock %}
 
 {% block content %}
-<section class="edge-hero">
+<section class="edge-hero"{% if hero_property and hero_property.main_image %} style="background-image: linear-gradient(110deg, rgba(7,29,56,.97), rgba(13,46,89,.42)), url('{{ hero_property.main_image.url }}'); background-position: center; background-size: cover;"{% endif %}>
     <div class="edge-hero__shade"></div>
     <div class="container position-relative">
         <div class="row align-items-center min-vh-75">
@@ -60,7 +60,7 @@
         <div class="row g-3">
             {% for category in categories %}
             <div class="col-md-4">
-                <a href="{% url 'properties_list' %}?category={{ category.key }}" class="category-tile category-{{ category.key }}">
+                <a href="{% url 'properties_list' %}?category={{ category.key }}" class="category-tile category-{{ category.key }}"{% if category.image_url %} style="background-image: linear-gradient(135deg, rgba(13,46,89,.94), rgba(13,46,89,.55)), url('{{ category.image_url }}');"{% endif %}>
                     <div><span class="category-tile__icon"><i class="{% if category.key == 'land' %}fas fa-tree{% elif category.key == 'commercial' %}fas fa-building{% else %}fas fa-house{% endif %}"></i></span><h3>{{ category.label }}</h3><p>{{ category.count }} listing{{ category.count|pluralize }}</p></div><i class="fas fa-arrow-right category-tile__arrow"></i>
                 </a>
             </div>

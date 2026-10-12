@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block title %}About EmanHomes{% endblock %}
 {% block meta_description %}Learn how EmanHomes supports property buyers, renters and owners across East Legon and Greater Accra.{% endblock %}
@@ -15,43 +16,41 @@
 <div class="container my-5">
     <div class="row g-5 align-items-center">
         <div class="col-lg-6">
-            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded shadow" alt="About Building">
+            {% if team_members.0.image_url %}
+            <img src="{{ team_members.0.image_url }}" class="img-fluid rounded shadow" alt="EmanHomes team">
+            {% else %}
+            <div class="bg-primary-custom rounded shadow d-flex align-items-center justify-content-center" style="min-height: 360px;">
+                <img src="{% static 'img/logo.jpeg' %}" class="img-fluid rounded" style="max-width: 180px;" alt="EmanHomes">
+            </div>
+            {% endif %}
         </div>
         <div class="col-lg-6">
             <h6 class="text-accent fw-bold text-uppercase">Who We Are</h6>
             <h2 class="fw-bold text-primary-custom mb-4">Property guidance built around clarity and communication.</h2>
-            <p class="text-muted mb-4">
-                At EmanHomes, we understand that buying, renting or selling property is a major decision. We help clients explore opportunities in Greater Accra with clear information, responsive communication and a practical path to the next step.
-            </p>
+            <p class="text-muted mb-4">At EmanHomes, we understand that buying, renting or selling property is a major decision. We help clients explore opportunities in Greater Accra with clear information, responsive communication and a practical path to the next step.</p>
             <div class="d-flex mb-3">
                 <i class="fas fa-check-circle text-accent mt-1 me-3"></i>
-                <div>
-                    <h5 class="fw-bold">Start with the right questions</h5>
-                    <p class="text-muted small">We help you clarify location, budget, property type, timing and the information needed before you proceed.</p>
-                </div>
+                <div><h5 class="fw-bold">Start with the right questions</h5><p class="text-muted small">We help you clarify location, budget, property type, timing and the information needed before you proceed.</p></div>
             </div>
             <div class="d-flex mb-3">
                 <i class="fas fa-check-circle text-accent mt-1 me-3"></i>
-                <div>
-                    <h5 class="fw-bold">A clear next step</h5>
-                    <p class="text-muted small">You can contact us by WhatsApp, phone or email and receive guidance matched to your enquiry.</p>
-                </div>
-
-                <section class="container py-5">
-                    <div class="text-center mb-5">
-                        <p class="text-accent fw-bold text-uppercase mb-2">Our process</p>
-                        <h2 class="fw-bold text-primary-custom">From first conversation to confident action</h2>
-                    </div>
-                    <div class="row g-4">
-                        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">1</div><h3 class="h5">Tell us what you need</h3><p class="text-muted small">Share your preferred areas, budget, timing and whether you are buying, renting or listing.</p></div></div>
-                        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">2</div><h3 class="h5">Review relevant options</h3><p class="text-muted small">We help you focus on suitable opportunities and identify the details that need follow-up.</p></div></div>
-                        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">3</div><h3 class="h5">Plan your next step</h3><p class="text-muted small">Arrange a conversation or viewing and proceed with the information and professional advice you need.</p></div></div>
-                    </div>
-                </section>
+                <div><h5 class="fw-bold">A clear next step</h5><p class="text-muted small">You can contact us by WhatsApp, phone or email and receive guidance matched to your enquiry.</p></div>
             </div>
         </div>
     </div>
 </div>
+
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <p class="text-accent fw-bold text-uppercase mb-2">Our process</p>
+        <h2 class="fw-bold text-primary-custom">From first conversation to confident action</h2>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">1</div><h3 class="h5">Tell us what you need</h3><p class="text-muted small">Share your preferred areas, budget, timing and whether you are buying, renting or listing.</p></div></div>
+        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">2</div><h3 class="h5">Review relevant options</h3><p class="text-muted small">We help you focus on suitable opportunities and identify the details that need follow-up.</p></div></div>
+        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">3</div><h3 class="h5">Plan your next step</h3><p class="text-muted small">Arrange a conversation or viewing and proceed with the information and professional advice you need.</p></div></div>
+    </div>
+</section>
 
 <div class="bg-light py-5">
     <div class="container">

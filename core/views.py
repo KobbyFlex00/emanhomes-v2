@@ -45,14 +45,18 @@ def home(request):
     category = request.GET.get('category', '').strip()
     properties = filter_properties(request)[:6]
     services = Service.objects.all()
-    categories = [
-        {
+    categories = []
+    for key, label in Property.CATEGORY_CHOICES:
+        category_property = Property.objects.filter(
+            category=key,
+        ).exclude(main_image='').first()
+        categories.append({
             'key': key,
             'label': label,
             'count': Property.objects.filter(category=key).count(),
-        }
-        for key, label in Property.CATEGORY_CHOICES
-    ]
+            'image_url': category_property.main_image.url if category_property else '',
+        })
+    hero_property = Property.objects.exclude(main_image='').first()
     
     context = {
         'properties': properties,
@@ -60,6 +64,7 @@ def home(request):
         'search_query': query,
         'search_category': category,
         'categories': categories,
+        'hero_property': hero_property,
     }
     return render(request, 'core/home.html', context)
 

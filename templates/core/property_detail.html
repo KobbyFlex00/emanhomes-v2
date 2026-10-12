@@ -150,7 +150,7 @@
                         <button type="submit" data-analytics-event="inquiry_submit" class="btn btn-accent w-100 fw-bold py-2">Send Message</button>
                     </form>
                     <a class="btn btn-success w-100 fw-bold mt-2" target="_blank" rel="noopener" data-analytics-event="whatsapp_click"
-                       href="https://wa.me/233205843775?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
+                       href="https://wa.me/{{ site_config.whatsapp_phone|default:'233205843775'|cut:' '|cut:'+' }}?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
                         <i class="fab fa-whatsapp me-2"></i> Ask on WhatsApp
                     </a>
                     
