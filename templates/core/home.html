@@ -1,137 +1,101 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
 
-{% block title %}Trusted Real Estate Partner in Accra{% endblock %}
-{% block meta_description %}Find premium homes, land and commercial property in East Legon and Greater Accra with EmanHomes. Speak to a property specialist today.{% endblock %}
+{% block title %}Real Estate in Ghana, Made Clear{% endblock %}
+{% block meta_description %}Explore homes, land and commercial property in Greater Accra with EmanHomes Limited. Search verified details and speak directly with our property team.{% endblock %}
 
 {% block content %}
-
-<div class="position-relative" style="height: 700px; overflow: hidden;">
-    <div id="heroCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-interval="5000">
-        <div class="carousel-inner h-100">
-            <div class="carousel-item active h-100">
-                <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Villa Modern" fetchpriority="high">
-            </div>
-            <div class="carousel-item h-100">
-                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Luxury Pool Estate" loading="lazy">
-            </div>
-            <div class="carousel-item h-100">
-                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80" class="d-block w-100 h-100" style="object-fit: cover;" alt="Modern Estate Balcony" loading="lazy">
-            </div>
-        </div>
-    </div>
-    
-    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50" style="z-index: 1;"></div>
-
-    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="z-index: 2;">
-        <div class="container text-center text-white">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <h1 class="display-3 fw-bold mb-4 text-accent animate-up">The #1 Real Estate Partner Investors Trust</h1>
-                    <p class="lead fs-4 mb-5 text-light animate-up-delay">Clear guidance, carefully selected properties and responsive support for your next move in Greater Accra.</p>
+<section class="edge-hero">
+    <div class="edge-hero__shade"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-xl-8">
+                <p class="eyebrow text-accent">EmanHomes Limited · Greater Accra</p>
+                <h1 class="display-2 text-white fw-bold mb-4">Real estate in Ghana, <em>made clear.</em></h1>
+                <p class="lead text-white-50 mb-4 col-lg-8">Homes, land and commercial opportunities supported by responsive guidance from your first enquiry to your next step.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'properties_list' %}" class="btn btn-accent btn-lg rounded-pill px-4" data-analytics-event="browse_properties">Explore properties <i class="fas fa-arrow-right ms-2"></i></a>
+                    <a href="{% url 'contact' %}?type=listing" class="btn btn-outline-light btn-lg rounded-pill px-4">List your property</a>
                 </div>
             </div>
-
-            <div class="bg-white p-4 rounded shadow-lg mx-auto animate-up-delay-2" style="max-width: 900px;">
-                <form action="{% url 'home' %}" method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <select name="category" class="form-select border-0 bg-light py-3">
-                            <option value="all">All Types</option>
-                            <option value="land" {% if search_category == 'land' %}selected{% endif %}>Land</option>
-                            <option value="residential" {% if search_category == 'residential' %}selected{% endif %}>House</option>
-                            <option value="commercial" {% if search_category == 'commercial' %}selected{% endif %}>Commercial</option>
-                        </select>
-                    </div>
-                    <div class="col-md-7">
-                        <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control border-0 bg-light py-3" placeholder="Search location, property or area">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-accent w-100 py-3 fw-bold"><i class="fas fa-search me-2"></i> Search</button>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
-</div>
+</section>
 
-<section class="py-5 bg-light">
+<section class="edge-search-wrap">
     <div class="container">
-        <div class="text-center mb-5">
-            <h6 class="text-accent fw-bold text-uppercase">Opportunities</h6>
-            <h2 class="fw-bold text-primary-custom">Featured Listings</h2>
-        </div>
-
-        <div class="row g-4">
-            {% for property in properties %}
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 overflow-hidden property-card">
-                    <div class="position-relative">
-                        {% if property.main_image %}
-                            <img src="{{ property.main_image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ property.title }}" loading="lazy">
-                        {% elif property.video_url %}
-                            <div style="height: 250px; background: #000; overflow: hidden;">
-                                <iframe src="{{ property.get_embed_url }}" title="{{ property.title }}" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
-                            </div>
-                        {% else %}
-                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 250px;">
-                                <i class="fas fa-image fa-2x opacity-50"></i>
-                            </div>
-                        {% endif %}
-                        <span class="badge bg-accent position-absolute top-0 start-0 m-3 shadow-sm">{{ property.get_category_display }}</span>
-                    </div>
-
-                    <div class="card-body p-4">
-                        <h5 class="card-title fw-bold mb-1 text-primary-custom">{{ property.title|truncatechars:35 }}</h5>
-                        <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1 text-accent"></i> {{ property.location }}</p>
-                        {% if property.reference_number %}<p class="text-muted mb-2" style="font-size:.75rem;">Ref: {{ property.reference_number }}</p>{% endif %}
-                        
-                        <h5 class="text-accent fw-bold mb-3">{{ property.currency_symbol }}{{ property.price|intcomma }}</h5>
-                        
-                        <div class="d-grid">
-                            <a href="{% url 'property_detail' property.slug %}" data-analytics-event="property_view" class="btn btn-outline-primary btn-sm rounded-pill" style="border-color: var(--primary); color: var(--primary);">View Details</a>
-                        </div>
-                    </div>
+        <div class="edge-search-card">
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                <div>
+                    <span class="eyebrow text-accent">Find your next opportunity</span>
+                    <h2 class="h3 mb-0 text-primary-custom">What are you looking for?</h2>
+                </div>
+                <div class="edge-intents mt-3 mt-md-0">
+                    <a href="{% url 'properties_list' %}?status=for_sale" class="active">Buy</a>
+                    <a href="{% url 'properties_list' %}?status=for_rent">Rent</a>
+                    <a href="{% url 'contact' %}?type=listing">List</a>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12 text-center py-5">
-                <p class="text-muted">No properties found matching your criteria.</p>
-                <a href="{% url 'home' %}?category=all" class="btn btn-accent">View All Properties</a>
-            </div>
-            {% endfor %}
+            <form action="{% url 'properties_list' %}" method="get" class="row g-2">
+                <div class="col-lg-4"><label class="visually-hidden" for="home-q">Keyword</label><input id="home-q" name="q" value="{{ search_query|default:'' }}" class="form-control form-control-lg" placeholder="Keyword, area or reference"></div>
+                <div class="col-lg-3"><label class="visually-hidden" for="home-category">Property type</label><select id="home-category" name="category" class="form-select form-select-lg"><option value="all">All property types</option>{% for category in categories %}<option value="{{ category.key }}" {% if search_category == category.key %}selected{% endif %}>{{ category.label }}</option>{% endfor %}</select></div>
+                <div class="col-lg-3"><label class="visually-hidden" for="home-status">Status</label><select id="home-status" name="status" class="form-select form-select-lg"><option value="all">Sale or rent</option><option value="for_sale">For sale</option><option value="for_rent">For rent</option></select></div>
+                <div class="col-lg-2"><button class="btn btn-primary-custom btn-lg w-100" type="submit"><i class="fas fa-search me-2"></i>Search</button></div>
+            </form>
         </div>
-        
-        <div class="text-center mt-5">
-            <a href="{% url 'properties_list' %}" class="btn btn-outline-dark px-5 py-2 rounded-pill">Browse All Properties</a>
+        <div class="edge-quick-links d-flex flex-wrap gap-2 mt-3">
+            <a href="{% url 'properties_list' %}?category=land"><i class="fas fa-tree me-2"></i>Land opportunities</a>
+            <a href="{% url 'properties_list' %}?category=residential"><i class="fas fa-house me-2"></i>Homes</a>
+            <a href="{% url 'properties_list' %}?category=commercial"><i class="fas fa-building me-2"></i>Commercial property</a>
         </div>
     </div>
 </section>
 
 <section class="py-5">
     <div class="container">
-        <div class="row g-4 align-items-stretch">
-            <div class="col-lg-4">
-                <p class="text-accent fw-bold text-uppercase mb-2">How we help</p>
-                <h2 class="fw-bold text-primary-custom">A clearer way to make your next property move.</h2>
-                <p class="text-muted">Whether you are buying, renting or bringing a property to market, our team helps you move from first conversation to next step with practical guidance.</p>
-                <a href="{% url 'contact' %}" class="btn btn-accent rounded-pill px-4">Speak to a specialist</a>
+        <div class="section-heading d-flex justify-content-between align-items-end mb-4">
+            <div><p class="eyebrow text-accent mb-2">Browse by category</p><h2 class="display-6 fw-bold text-primary-custom mb-0">Property for your needs</h2></div>
+            <a href="{% url 'properties_list' %}" class="text-primary-custom fw-bold d-none d-md-block">View all <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-3">
+            {% for category in categories %}
+            <div class="col-md-4">
+                <a href="{% url 'properties_list' %}?category={{ category.key }}" class="category-tile category-{{ category.key }}">
+                    <div><span class="category-tile__icon"><i class="{% if category.key == 'land' %}fas fa-tree{% elif category.key == 'commercial' %}fas fa-building{% else %}fas fa-house{% endif %}"></i></span><h3>{{ category.label }}</h3><p>{{ category.count }} listing{{ category.count|pluralize }}</p></div><i class="fas fa-arrow-right category-tile__arrow"></i>
+                </a>
             </div>
-            <div class="col-lg-8">
-                <div class="row g-3">
-                    <div class="col-md-4"><div class="p-4 h-100 border rounded-3"><i class="fas fa-search feature-icon fa-2x mb-3"></i><h3 class="h5">Find the right fit</h3><p class="small text-muted mb-0">Search by location, type, status and budget, then ask for the details that matter.</p></div></div>
-                    <div class="col-md-4"><div class="p-4 h-100 border rounded-3"><i class="fas fa-comments feature-icon fa-2x mb-3"></i><h3 class="h5">Get responsive support</h3><p class="small text-muted mb-0">Choose WhatsApp, phone or email and tell us how you prefer to continue.</p></div></div>
-                    <div class="col-md-4"><div class="p-4 h-100 border rounded-3"><i class="fas fa-file-signature feature-icon fa-2x mb-3"></i><h3 class="h5">Move with clarity</h3><p class="small text-muted mb-0">Understand the next steps, documents and decisions before committing.</p></div></div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 </section>
 
-<section class="py-5 bg-primary-custom text-white">
+<section class="py-5 bg-light">
     <div class="container">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-8"><h2 class="fw-bold text-white">Have a property to sell or lease?</h2><p class="text-white-50 mb-0">Share a few details and let EmanHomes help you understand the best next step for your property.</p></div>
-            <div class="col-lg-4 text-lg-end"><a href="{% url 'contact' %}?type=listing" class="btn btn-accent rounded-pill px-4">Request a property consultation</a></div>
+        <div class="section-heading d-flex justify-content-between align-items-end mb-4">
+            <div><p class="eyebrow text-accent mb-2">Our listings</p><h2 class="display-6 fw-bold text-primary-custom mb-0">Featured opportunities</h2><p class="text-muted mt-2 mb-0">Explore the latest properties currently managed through the EmanHomes admin panel.</p></div>
+            <a href="{% url 'properties_list' %}" class="btn btn-outline-accent rounded-pill d-none d-md-inline-block">See all properties</a>
+        </div>
+        <div class="row g-4">
+            {% for property in properties %}
+            <div class="col-md-6 col-lg-4">
+                <article class="listing-card h-100">
+                    <a href="{% url 'property_detail' property.slug %}" class="listing-card__media" data-analytics-event="property_view">
+                        {% if property.main_image %}<img src="{{ property.main_image.url }}" alt="{{ property.title }}" loading="lazy">{% elif property.gallery.first %}<img src="{{ property.gallery.first.image.url }}" alt="{{ property.title }}" loading="lazy">{% else %}<div class="listing-card__placeholder"><i class="fas fa-image"></i></div>{% endif %}
+                        <span class="listing-card__badge">{{ property.get_status_display }}</span>
+                        {% if property.is_featured %}<span class="listing-card__featured">Featured</span>{% endif %}
+                    </a>
+                    <div class="p-4"><p class="small text-muted mb-2"><i class="fas fa-location-dot text-accent me-1"></i>{{ property.location }}</p><h3 class="h5 text-primary-custom mb-2">{{ property.title|truncatechars:54 }}</h3><div class="listing-card__facts">{% if property.bedrooms %}<span><i class="fas fa-bed"></i>{{ property.bedrooms }} beds</span>{% endif %}{% if property.bathrooms %}<span><i class="fas fa-bath"></i>{{ property.bathrooms }} baths</span>{% endif %}{% if property.property_size %}<span><i class="fas fa-ruler-combined"></i>{{ property.property_size|floatformat:0 }} {{ property.property_size_unit }}</span>{% endif %}</div><div class="d-flex justify-content-between align-items-center mt-4"><strong class="listing-card__price">{{ property.currency_symbol }}{{ property.price|intcomma }}</strong><a href="{% url 'property_detail' property.slug %}" class="stretched-link text-primary-custom fw-bold small">Details <i class="fas fa-arrow-right ms-1"></i></a></div></div>
+                </article>
+            </div>
+            {% empty %}<div class="col-12"><div class="empty-state">Property listings will appear here as they are added through the admin panel.</div></div>{% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="edge-trust-panel">
+            <div class="row g-4 align-items-center"><div class="col-lg-7"><p class="eyebrow text-accent">Why EmanHomes</p><h2 class="display-6 fw-bold text-primary-custom">Clear information for important decisions.</h2><p class="text-muted mb-0">EmanHomes Limited supports sales, management, development, land, houses, cleaning services and construction across Greater Accra. Start with your priorities and let our team help you identify the next practical step.</p></div><div class="col-lg-5"><div class="row g-3"><div class="col-6"><div class="trust-stat"><strong>Buy</strong><span>Homes & land</span></div></div><div class="col-6"><div class="trust-stat"><strong>Rent</strong><span>Residential & commercial</span></div></div><div class="col-6"><div class="trust-stat"><strong>List</strong><span>Property consultation</span></div></div><div class="col-6"><div class="trust-stat"><strong>Talk</strong><span>WhatsApp or phone</span></div></div></div></div></div>
         </div>
     </div>
 </section>

@@ -7,6 +7,8 @@ from uuid import uuid4
 class SiteConfiguration(models.Model):
     site_name = models.CharField(max_length=200, default="EmanHomes")
     main_phone = models.CharField(max_length=50, default="+233 20 584 3775")
+    secondary_phone = models.CharField(max_length=50, default="+233 55 448 0444")
+    whatsapp_phone = models.CharField(max_length=50, default="+233 20 584 3775")
     email = models.EmailField(default="emanpages@gmail.com")
     address = models.TextField(default="Dzen-Ayor, East Legon, Accra, Ghana")
     

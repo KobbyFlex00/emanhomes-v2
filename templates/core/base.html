@@ -180,9 +180,65 @@
             background: var(--accent);
             color: var(--primary);
         }
+
+        .utility-bar { background: #071d38; color: rgba(255,255,255,.75); font-size: .78rem; }
+        .utility-bar a { color: rgba(255,255,255,.85); text-decoration: none; }
+        .utility-bar a:hover { color: var(--accent); }
+        .navbar { padding: .75rem 0; }
+        .navbar-brand img { width: 34px; height: 34px !important; object-fit: cover; }
+        .nav-link { font-size: .9rem; }
+        .btn-primary-custom { background: var(--primary); color: #fff; border: 0; }
+        .btn-primary-custom:hover { background: #071d38; color: #fff; }
+        .eyebrow { letter-spacing: .16em; text-transform: uppercase; font-size: .72rem; font-weight: 700; }
+        .edge-hero { position: relative; min-height: 590px; display: flex; align-items: center; background: linear-gradient(110deg, rgba(7,29,56,.97), rgba(13,46,89,.42)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=85') center/cover; }
+        .edge-hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,29,56,.8), transparent 75%); }
+        .edge-hero h1 { max-width: 760px; line-height: 1.03; letter-spacing: -.03em; }
+        .edge-hero h1 em { color: var(--accent); font-style: normal; }
+        .min-vh-75 { min-height: 590px; }
+        .edge-search-wrap { position: relative; margin-top: -72px; z-index: 5; }
+        .edge-search-card { background: #fff; border-radius: 12px; padding: 1.6rem; box-shadow: 0 16px 45px rgba(7,29,56,.16); }
+        .edge-search-card .form-control, .edge-search-card .form-select { border-color: #e7ebf0; min-height: 52px; }
+        .edge-intents { display: flex; gap: .25rem; background: #f3f5f7; border-radius: 50px; padding: .25rem; }
+        .edge-intents a { border-radius: 50px; color: #657080; font-weight: 700; padding: .55rem 1rem; text-decoration: none; font-size: .85rem; }
+        .edge-intents a.active, .edge-intents a:hover { background: var(--primary); color: #fff; }
+        .edge-quick-links a { background: #fff; border: 1px solid #e4e8ed; border-radius: 50px; color: var(--primary); font-size: .82rem; padding: .6rem .9rem; text-decoration: none; }
+        .edge-quick-links a:hover { border-color: var(--secondary); color: var(--secondary); }
+        .category-tile { min-height: 180px; padding: 1.5rem; border-radius: 12px; color: #fff; display: flex; align-items: end; justify-content: space-between; text-decoration: none; background: linear-gradient(135deg, rgba(13,46,89,.94), rgba(13,46,89,.55)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=75') center/cover; transition: transform .25s ease, box-shadow .25s ease; }
+        .category-tile.category-land { background-image: linear-gradient(135deg, rgba(13,46,89,.93), rgba(13,46,89,.5)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=75'); }
+        .category-tile.category-commercial { background-image: linear-gradient(135deg, rgba(13,46,89,.93), rgba(13,46,89,.5)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=75'); }
+        .category-tile:hover { color: #fff; transform: translateY(-4px); box-shadow: 0 12px 28px rgba(7,29,56,.18); }
+        .category-tile h3 { color: #fff; margin: .9rem 0 .15rem; }
+        .category-tile p { color: rgba(255,255,255,.75); margin: 0; }
+        .category-tile__icon { color: var(--accent); font-size: 1.6rem; }
+        .category-tile__arrow { font-size: 1.15rem; color: var(--accent); }
+        .listing-card { background: #fff; border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden; transition: transform .25s ease, box-shadow .25s ease; }
+        .listing-card:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(7,29,56,.12); }
+        .listing-card__media { position: relative; display: block; height: 230px; overflow: hidden; }
+        .listing-card__media img { width: 100%; height: 100%; object-fit: cover; filter: none; transition: transform .35s ease; }
+        .listing-card:hover .listing-card__media img { transform: scale(1.04); }
+        .listing-card__badge, .listing-card__featured { position: absolute; top: 14px; border-radius: 50px; padding: .35rem .65rem; font-size: .7rem; font-weight: 700; }
+        .listing-card__badge { left: 14px; background: var(--primary); color: #fff; }
+        .listing-card__featured { right: 14px; background: var(--accent); color: var(--primary); }
+        .listing-card__placeholder { height: 100%; display: grid; place-items: center; background: #e9edf1; color: #9aa5b1; font-size: 2rem; }
+        .listing-card__facts { display: flex; flex-wrap: wrap; gap: .8rem; color: #7b8591; font-size: .76rem; }
+        .listing-card__facts i { color: var(--secondary); margin-right: .3rem; }
+        .listing-card__price { color: var(--secondary); font-size: 1.1rem; }
+        .edge-trust-panel { background: #f5f7f9; border-radius: 14px; padding: 3rem; }
+        .trust-stat { border-left: 2px solid var(--accent); padding-left: .8rem; }
+        .trust-stat strong, .trust-stat span { display: block; }
+        .trust-stat strong { color: var(--primary); font-size: 1.1rem; }
+        .trust-stat span { color: #7b8591; font-size: .78rem; margin-top: .2rem; }
+        .empty-state { padding: 4rem 1rem; text-align: center; color: #7b8591; background: #fff; border: 1px dashed #ccd3db; border-radius: 12px; }
+        @media (max-width: 767px) { .edge-hero { min-height: 560px; } .min-vh-75 { min-height: 560px; } .edge-hero h1 { font-size: 2.8rem; } .edge-search-wrap { margin-top: -42px; } .edge-search-card { padding: 1.1rem; } .edge-trust-panel { padding: 1.5rem; } .utility-bar { display: none; } }
     </style>
 </head>
 <body>
+    <div class="utility-bar py-2">
+        <div class="container d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-location-dot me-2"></i>{{ site_config.address|default:"Dzen-Ayor, East Legon, Accra, Ghana" }}</span>
+            <span class="d-flex gap-3"><a href="tel:{{ site_config.main_phone|default:'+233205843775' }}"><i class="fas fa-phone me-1"></i>{{ site_config.main_phone|default:"+233 20 584 3775" }}</a><a href="mailto:{{ site_config.email|default:'emanpages@gmail.com' }}"><i class="fas fa-envelope me-1"></i>{{ site_config.email|default:"emanpages@gmail.com" }}</a></span>
+        </div>
+    </div>
 
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
         <div class="container">
@@ -213,7 +269,7 @@
                         <a class="nav-link" href="{% url 'contact' %}">Contact</a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <a href="tel:{{ site_config.main_phone }}" class="btn btn-accent rounded-pill px-4 btn-sm">
+                        <a href="tel:{{ site_config.main_phone|default:'+233205843775' }}" class="btn btn-accent rounded-pill px-4 btn-sm">
                             <i class="fas fa-phone-alt me-2"></i> Call Us
                         </a>
                     </li>
@@ -223,7 +279,7 @@
     </nav>
 
     <div class="fab-container">
-        <a href="https://wa.me/233205843775?text=Hello%20EmanHomes%2C%20I%27d%20like%20help%20finding%20a%20property." target="_blank" rel="noopener" class="fab-btn fab-whatsapp" title="Chat on WhatsApp" aria-label="Chat with EmanHomes on WhatsApp" data-analytics-event="whatsapp_click">
+        <a href="https://wa.me/{{ site_config.whatsapp_phone|default:'233205843775'|cut:' '|cut:'+' }}?text=Hello%20EmanHomes%2C%20I%27d%20like%20help%20finding%20a%20property." target="_blank" rel="noopener" class="fab-btn fab-whatsapp" title="Chat on WhatsApp" aria-label="Chat with EmanHomes on WhatsApp" data-analytics-event="whatsapp_click">
             <i class="fab fa-whatsapp"></i>
         </a>
         <a href="tel:{{ site_config.main_phone|default:'+233205843775' }}" class="fab-btn fab-phone" title="Call Us" aria-label="Call EmanHomes" data-analytics-event="phone_click">
@@ -273,7 +329,7 @@
                     <h5 class="fw-bold mb-3 text-accent">Contact Us</h5>
                     <ul class="list-unstyled text-white-50">
                         <li class="mb-3"><i class="fas fa-map-marker-alt me-2 text-accent"></i> {{ site_config.address|default:"Dzen-Ayor, East Legon, Accra" }}</li>
-                        <li class="mb-3"><i class="fas fa-phone me-2 text-accent"></i> {{ site_config.main_phone|default:"+233 20 584 3775" }}</li>
+                        <li class="mb-3"><i class="fas fa-phone me-2 text-accent"></i> {{ site_config.main_phone|default:"+233 20 584 3775" }}{% if site_config.secondary_phone %} · {{ site_config.secondary_phone }}{% endif %}</li>
                         <li class="mb-3"><i class="fas fa-envelope me-2 text-accent"></i> {{ site_config.email|default:"emanpages@gmail.com" }}</li>
                     </ul>
                 </div>

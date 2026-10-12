@@ -45,12 +45,21 @@ def home(request):
     category = request.GET.get('category', '').strip()
     properties = filter_properties(request)[:6]
     services = Service.objects.all()
+    categories = [
+        {
+            'key': key,
+            'label': label,
+            'count': Property.objects.filter(category=key).count(),
+        }
+        for key, label in Property.CATEGORY_CHOICES
+    ]
     
     context = {
         'properties': properties,
         'services': services,
         'search_query': query,
-        'search_category': category
+        'search_category': category,
+        'categories': categories,
     }
     return render(request, 'core/home.html', context)
 
