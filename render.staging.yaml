@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: eman-homes-staging
+    runtime: python
+    branch: feature/eman-homes-launch-integration
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn emanhomes_project.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eman-homes-staging-db
+          property: connectionString
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: LEAD_NOTIFICATION_EMAIL
+        sync: false
+      - key: ANALYTICS_MEASUREMENT_ID
+        sync: false
+
+databases:
+  - name: eman-homes-staging-db
+    plan: basic-256mb
