@@ -8,6 +8,9 @@ db.sqlite3
 # Ignore media uploads (images should be uploaded fresh on the server)
 media/
 
+# Ignore collected static output (generated during deployment)
+staticfiles/
+
 # Ignore python compiled files
 __pycache__/
 *.pyc
