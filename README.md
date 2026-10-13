@@ -93,6 +93,12 @@ CLOUDINARY_URL=<cloudinary-connection-url>
 ANALYTICS_MEASUREMENT_ID=<optional-ga4-measurement-id>
 ```
 
+`SECRET_KEY` is required; the application intentionally fails to start if it is
+missing. Generate a value with `python -c "from secrets import token_urlsafe;
+print(token_urlsafe(64))"` and save it only in Render's environment settings.
+If the old committed fallback key was ever used in production, rotate it before
+the next deploy; this will invalidate existing Django sessions.
+
 Use the following Render commands:
 
 ```text
