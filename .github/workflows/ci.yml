@@ -24,6 +24,6 @@ jobs:
       - run: python manage.py test
         env:
           SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks
-      - run: python manage.py collectstatic --noinput
+      - run: python manage.py collectstatic --noinput --upload-unhashed-files
         env:
           SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks

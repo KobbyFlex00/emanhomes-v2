@@ -102,7 +102,7 @@ the next deploy; this will invalidate existing Django sessions.
 Use the following Render commands:
 
 ```text
-Build:  pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+Build:  pip install -r requirements.txt && python manage.py collectstatic --noinput --upload-unhashed-files && python manage.py migrate
 Start:  gunicorn emanhomes_project.wsgi:application
 ```
 
@@ -139,7 +139,7 @@ Image URL: Paste a direct link to the photo (e.g., Right-click a LinkedIn photo 
 ☁️ Deployment (Render)
 This project is configured for automated deployment on Render.com.
 
-Build Command: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+Build Command: pip install -r requirements.txt && python manage.py collectstatic --noinput --upload-unhashed-files && python manage.py migrate
 
 Start Command: gunicorn emanhomes_project.wsgi:application
 
