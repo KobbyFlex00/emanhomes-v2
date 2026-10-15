@@ -26,6 +26,11 @@ CSRF_TRUSTED_ORIGINS = [
         'CSRF_TRUSTED_ORIGINS', 'https://emanhomes.com,https://www.emanhomes.com'
     ).split(',') if origin
 ]
+# Render provides each service's own hostname (e.g. the staging onrender.com URL).
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 INSTALLED_APPS = [
     'cloudinary_storage',
@@ -37,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
     'core',
 ]
 
@@ -104,10 +110,29 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Not read by Django >= 5.1, but django-cloudinary-storage's collectstatic
+# command (used with --upload-unhashed-files in the build) still requires it.
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# --- MEDIA (Cloudinary) ---
+# Render's disk is ephemeral, so hosted environments must store uploads in
+# Cloudinary. Local development and CI fall back to the filesystem.
+cloudinary.config(
+    secure=True
+)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+USE_CLOUDINARY_MEDIA = bool(os.environ.get('CLOUDINARY_URL'))
+if os.environ.get('RENDER') and not USE_CLOUDINARY_MEDIA:
+    raise ImproperlyConfigured('CLOUDINARY_URL must be set on Render so media uploads persist.')
+
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if USE_CLOUDINARY_MEDIA
+            else 'django.core.files.storage.FileSystemStorage'
+        ),
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
@@ -115,13 +140,6 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# --- CLOUDINARY (Secure Images Fix) ---
-cloudinary.config(
-    secure=True
-)
-MEDIA_URL = '/media/'
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # --- SECURITY (HTTPS Fix) ---
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

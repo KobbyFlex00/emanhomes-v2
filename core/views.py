@@ -99,7 +99,7 @@ def contact(request):
         if form.is_valid():
             inquiry = form.save(commit=False)
             inquiry.property = related_property
-            inquiry.source = request.POST.get('source', 'website')
+            inquiry.source = form.cleaned_data.get('source') or 'website'
             inquiry.save()
             full_message = (
                 f"Sender: {inquiry.name}\nEmail: {inquiry.email}\n"

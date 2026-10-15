@@ -29,7 +29,7 @@ class PropertySitemap(Sitemap):
     priority = 0.9
 
     def items(self):
-        return Property.objects.all()
+        return Property.objects.order_by('-created_at', 'pk')
 
     def lastmod(self, item):
         return item.created_at

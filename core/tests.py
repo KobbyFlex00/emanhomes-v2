@@ -84,3 +84,112 @@ class ContactWorkflowTests(TestCase):
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(ContactMessage.objects.get().property, property_obj)
+
+    def test_oversized_source_is_trimmed(self):
+        response = self.client.post(reverse('contact'), {
+            'name': 'Esi',
+            'email': 'esi@example.com',
+            'subject': 'Hello',
+            'message': 'Please contact me.',
+            'inquiry_type': 'general',
+            'preferred_contact': 'email',
+            'consent_to_contact': 'on',
+            'source': 'x' * 500,
+        })
+        self.assertRedirects(response, reverse('contact'))
+        self.assertEqual(len(ContactMessage.objects.get().source), 100)
+
+    def test_missing_source_defaults_to_website(self):
+        self.client.post(reverse('contact'), {
+            'name': 'Yaw',
+            'email': 'yaw@example.com',
+            'subject': 'Hello',
+            'message': 'Please contact me.',
+            'inquiry_type': 'general',
+            'preferred_contact': 'email',
+            'consent_to_contact': 'on',
+        })
+        self.assertEqual(ContactMessage.objects.get().source, 'website')
+
+
+class MediaStorageSettingsTests(TestCase):
+    """Settings are evaluated at import, so exercise them in a fresh interpreter."""
+
+    def _load_settings(self, **env):
+        import os
+        import subprocess
+        import sys
+        child_env = {k: v for k, v in os.environ.items() if k not in ('RENDER', 'CLOUDINARY_URL')}
+        child_env.update(SECRET_KEY='test', DJANGO_SETTINGS_MODULE='emanhomes_project.settings', **env)
+        return subprocess.run(
+            [sys.executable, '-c',
+             'import django; django.setup(); from django.conf import settings; '
+             'print(settings.STORAGES["default"]["BACKEND"])'],
+            env=child_env, capture_output=True, text=True,
+        )
+
+    def test_uses_filesystem_without_cloudinary_locally(self):
+        result = self._load_settings()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('FileSystemStorage', result.stdout)
+
+    def test_uses_cloudinary_when_configured(self):
+        result = self._load_settings(CLOUDINARY_URL='cloudinary://key:secret@demo')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('MediaCloudinaryStorage', result.stdout)
+
+    def test_render_refuses_to_start_without_cloudinary(self):
+        result = self._load_settings(RENDER='true')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('CLOUDINARY_URL must be set on Render', result.stderr)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SeoEndpointTests(TestCase):
+    def test_sitemap_lists_properties(self):
+        property_obj = Property.objects.create(
+            title='Sitemap test plot', category='land', location='Oyarifa',
+            description='Plot', price=1000,
+        )
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('property_detail', kwargs={'slug': property_obj.slug}))
+
+    def test_robots_points_to_sitemap(self):
+        response = self.client.get('/robots.txt')
+        self.assertContains(response, 'Sitemap: http://testserver/sitemap.xml\n')
+
+
+class BuildCommandTests(TestCase):
+    def test_render_collectstatic_command_runs(self):
+        from django.core.management import call_command
+        call_command('collectstatic', interactive=False, dry_run=True, upload_unhashed_files=True, verbosity=0)
+
+
+class RenderHostnameTests(TestCase):
+    def test_render_hostname_is_allowed(self):
+        import os
+        import subprocess
+        import sys
+        env = {k: v for k, v in os.environ.items() if k not in ('RENDER', 'CLOUDINARY_URL')}
+        env.update(
+            SECRET_KEY='test', DJANGO_SETTINGS_MODULE='emanhomes_project.settings',
+            RENDER_EXTERNAL_HOSTNAME='eman-homes-staging.onrender.com',
+        )
+        result = subprocess.run(
+            [sys.executable, '-c',
+             'import django; django.setup(); from django.conf import settings; '
+             'print(settings.ALLOWED_HOSTS, settings.CSRF_TRUSTED_ORIGINS)'],
+            env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("'eman-homes-staging.onrender.com'", result.stdout)
+        self.assertIn("'https://eman-homes-staging.onrender.com'", result.stdout)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class BusinessHoursTests(TestCase):
+    def test_footer_shows_round_the_clock_hours(self):
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Open 24 hours')
+        self.assertNotContains(response, 'Closed')
