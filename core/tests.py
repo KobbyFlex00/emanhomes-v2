@@ -579,3 +579,53 @@ class ZeroDowntimeMigrationTests(TestCase):
         migration.backfill_updated_at(django_apps, None)
         listing.refresh_from_db()
         self.assertEqual(listing.updated_at, listing.created_at)
+
+
+class MediaStorageDiagnosticsTests(TestCase):
+    def run_command(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+        out = StringIO()
+        call_command('check_media_storage', stdout=out)
+        return out.getvalue()
+
+    @override_settings(USE_CLOUDINARY_MEDIA=False)
+    def test_reports_filesystem_when_cloudinary_not_configured(self):
+        self.assertIn('local filesystem', self.run_command())
+
+    @override_settings(USE_CLOUDINARY_MEDIA=True)
+    def test_reports_valid_cloudinary_credentials(self):
+        from unittest import mock
+        with mock.patch('cloudinary.api.ping', return_value={'status': 'ok'}):
+            self.assertIn('Cloudinary credentials OK', self.run_command())
+
+    @override_settings(USE_CLOUDINARY_MEDIA=True)
+    def test_explains_rejected_cloudinary_credentials(self):
+        from unittest import mock
+
+        import cloudinary.exceptions
+        from django.core.management.base import CommandError
+        with mock.patch('cloudinary.api.ping', side_effect=cloudinary.exceptions.Error('Invalid api_key 123')):
+            with self.assertRaisesMessage(CommandError, 'Invalid api_key 123'):
+                self.run_command()
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class AdminUploadFailureTests(TestCase):
+    def test_rejected_upload_shows_clear_message_instead_of_error_page(self):
+        from unittest import mock
+
+        import cloudinary.exceptions
+        from django.contrib import admin as django_admin
+        admin_user = User.objects.create_superuser('boss', 'boss@example.com', 'pw-12345!x')
+        self.client.force_login(admin_user)
+        with mock.patch.object(
+            django_admin.ModelAdmin, 'changeform_view',
+            side_effect=cloudinary.exceptions.Error('Invalid api_key 123'),
+        ), self.assertLogs('core.admin', level='ERROR'):
+            response = self.client.post('/admin/core/property/add/', {'title': 'Plot'})
+        self.assertRedirects(response, '/admin/core/property/add/', fetch_redirect_response=False)
+        page = self.client.get('/admin/core/property/add/')
+        self.assertContains(page, 'image storage service rejected the upload')
+        self.assertFalse(Property.objects.exists())

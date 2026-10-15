@@ -134,6 +134,8 @@ Safety rails:
 * On Render, the app will not start without `CLOUDINARY_URL`, so uploads cannot land on the ephemeral disk.
 * On Render, the app will not start with `DEBUG=true`.
 
+After setting or changing `CLOUDINARY_URL`, open the service's **Shell** in Render and run `python manage.py check_media_storage`. It confirms that Cloudinary accepts the credentials before staff try to upload images.
+
 Generate a secret key with `python -c "from secrets import token_urlsafe; print(token_urlsafe(64))"`.
 
 Render commands:

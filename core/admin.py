@@ -1,7 +1,13 @@
+import logging
+
+import cloudinary.exceptions
 from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 
 from .models import ContactMessage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(SiteConfiguration)
@@ -42,6 +48,21 @@ class PropertyImageInline(admin.TabularInline):
 
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
+    def changeform_view(self, request, *args, **kwargs):
+        # Uploads go to Cloudinary while saving. If it refuses them, the save is rolled
+        # back; tell staff why instead of showing the generic error page.
+        try:
+            return super().changeform_view(request, *args, **kwargs)
+        except cloudinary.exceptions.Error:
+            logger.exception('Image upload to Cloudinary failed in the property admin')
+            self.message_user(
+                request,
+                'The image storage service rejected the upload, so nothing was saved. '
+                'Ask the site administrator to run "python manage.py check_media_storage".',
+                messages.ERROR,
+            )
+            return HttpResponseRedirect(request.get_full_path())
+
     list_display = (
         'reference_number', 'title', 'price_display', 'status', 'publication_status',
         'category', 'location', 'is_featured', 'updated_at',
