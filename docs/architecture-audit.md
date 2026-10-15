@@ -179,3 +179,21 @@ It is still in git history (I have not printed the value). The README already sa
 6. Is the broker agreement form/PDF current?
 7. Does any consumer need the JSON API now?
 8. Who supplies the privacy policy and terms text?
+
+---
+
+## 10. Progress log
+
+**2026-10-15: hotfix branch (`hotfix/media-storage-and-enquiry-source`, merged to `staging`)**
+- R1 fixed: media uses Cloudinary via `STORAGES`, and the app refuses to start on Render without `CLOUDINARY_URL`. The live site's listings use Instagram embeds and no uploaded images appeared on public pages, so no image loss was observed.
+- R2: Eman Homes confirmed the production `SECRET_KEY` has been rotated.
+- R4 fixed: the staging Blueprint tracks the `staging` branch.
+- R5 fixed: the enquiry `source` value goes through the form and is trimmed to 100 characters.
+- **New finding, fixed:** `/sitemap.xml` returned 500 in production because `django.contrib.sitemaps` was not installed.
+- PR #2 review follow-ups: there are no uploaded images to migrate, because all 36 live listings use Instagram embeds and none reference `/media/` or Cloudinary (checked 2026-10-15). **Open (Phase 2):** clean up Cloudinary objects orphaned when an admin save fails after the upload succeeds.
+- `STATICFILES_STORAGE` is kept on purpose: the `django-cloudinary-storage` `collectstatic` command used in the build still reads it. A test now runs that command.
+
+**2026-10-15: Phase 1 (`feature/phase1-foundation`)**
+- R9 fixed: all dependencies pinned. Now on Django 5.2 LTS, gunicorn 23 and whitenoise 6.12.
+- R14 fixed: `DEBUG` is read from the environment (default off, refused on Render). The HTTPS redirect, secure cookies and HSTS are derived from it.
+- Added `/healthz/`, branded 404 and self-contained 500 pages, a 10-second `EMAIL_TIMEOUT`, stdout logging, Ruff in CI, and `.env.example`. Rewrote the README.

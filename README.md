@@ -1,160 +1,175 @@
-Markdown
-# 🏡 EmanHomes - Premier Real Estate Platform
+# 🏡 EmanHomes — Real Estate Website
 
-A modern, high-performance real estate portfolio website built for **EmanHomes**, a trusted real estate partner in East Legon & Greater Accra, Ghana. This platform allows administrators to easily list properties, manage team members, and connect with clients via WhatsApp and direct calls.
+The website and property platform for **Eman Homes Limited GH**, based in East Legon, Greater Accra, Ghana. Staff list properties, manage content and follow up on enquiries through Django Admin. Visitors browse listings and get in touch by enquiry form, WhatsApp or phone.
 
-**Live Website:** [https://emanhomes.com](https://emanhomes.com)
+**Live website:** [https://emanhomes.com](https://emanhomes.com)
 
 ---
 
-## ✨ Key Features
+## ✨ Key features
 
-### 🏠 Property Management
-* **Video-First Listings:** Support for embedding **YouTube** and **Instagram** videos directly into property cards.
-* **Smart Fallbacks:** Automatically displays a video player if no image is uploaded.
-* **Dynamic Currency:** Admin can toggle prices between **USD ($)** and **GHS (GH₵)**.
-* **Mortgage Calculator:** Built-in JS calculator on every property page.
-* **Filtering:** Search by title, description and location, then filter by category, status, price and bedrooms.
-* **Conversion Tracking:** Optional GA4 events for property views, enquiries, phone clicks and WhatsApp clicks.
+### 🏠 Property management
+* **Video-first listings:** embed **YouTube** and **Instagram** videos in property cards.
+* **Fallbacks:** a property shows its video when no image has been uploaded.
+* **Currency:** prices in **USD ($)** or **GHS (GH₵)**.
+* **Mortgage calculator** on property pages.
+* **Search and filters:** keyword (title, description, location), category, status, price and bedrooms.
+* **Conversion tracking:** optional GA4 events for property views, enquiries, phone clicks and WhatsApp clicks.
 
 ### 👥 Team & About
-* **"No-Upload" System:** Team member photos are added via direct URL (LinkedIn/Imgur) to save server storage and prevent broken links.
-* **Auto-Fix Drive Links:** Smart logic to handle various image link formats.
+* Team member photos are added by direct image URL rather than upload.
 
-### 🛠 Administrative Control
-* **Custom Admin Panel:** Secure login to manage all site content.
-* **Site Configuration:** Update phone numbers, email, and address from the admin panel without touching code.
-* **Lead Operations:** Track enquiry type, preferred contact method, status, follow-up date, internal notes, and related property.
-* **Property Gallery:** Add multiple listing images, captions, and display order from the Property admin page.
+### 🛠 Administration
+* **Django Admin** for all site content.
+* **Site configuration:** phone numbers, email and address are edited in Admin, not in code.
+* **Lead operations:** enquiry type, preferred contact method, status, follow-up date, internal notes and related property.
+* **Property gallery:** multiple images per listing, with captions and display order.
 
-### 🎨 User Experience
-* **Luxury Theme:** Custom "Navy & Gold" branding.
-* **Responsive Design:** Fully mobile-friendly layout using Bootstrap 5.
-* **Direct Contact:** Floating WhatsApp & Call buttons.
-* **Broker Forms:** Integration with Google Forms & PDF downloads for transaction agreements.
-
----
-
-## 🚀 Tech Stack
-
-* **Backend:** Python 3.11, Django 5.1.5
-* **Database:** PostgreSQL (Production), SQLite (Development)
-* **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5
-* **Static Files:** WhiteNoise
-* **Deployment:** Render (Web Service + Managed PostgreSQL)
+### 🎨 User experience
+* Navy, white and red branding taken from the Eman Homes logo.
+* Responsive Bootstrap 5 layout.
+* Floating WhatsApp and call buttons.
+* Links to the transaction broker agreement (Google Form and PDF).
 
 ---
 
-## ⚙️ Local Installation Guide
+## 🚀 Tech stack
 
-Follow these steps to run the project on your machine.
+* **Backend:** Python 3.11, Django 5.2 LTS
+* **Database:** PostgreSQL in production and staging; SQLite for local development
+* **Frontend:** server-rendered Django templates, Bootstrap 5, a little vanilla JavaScript
+* **Static files:** WhiteNoise
+* **Media:** Cloudinary (required on Render)
+* **Hosting:** Render web service and managed PostgreSQL
 
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/KobbyFlex00/emanhomes-v2.git](https://github.com/KobbyFlex00/emanhomes-v2.git)
+---
+
+## ⚙️ Local development
+
+### 1. Clone and create a virtual environment
+
+```powershell
+git clone https://github.com/KobbyFlex00/emanhomes-v2.git
 cd emanhomes-v2
-2. Create a Virtual Environment
-Bash
-# Windows
 python -m venv venv
-.\venv\Scripts\activate
+.\venv\Scripts\Activate.ps1          # macOS/Linux: source venv/bin/activate
+pip install -r requirements-dev.txt
+```
 
-# Mac/Linux
-python3 -m venv venv
-source venv/bin/activate
-3. Install Dependencies
-Bash
-pip install -r requirements.txt
-4. Setup Database
-Bash
-python manage.py makemigrations
+### 2. Set environment variables
+
+`.env.example` lists every variable. The app reads them from the environment, and nothing loads `.env` automatically. For a quick local session in PowerShell:
+
+```powershell
+$env:SECRET_KEY = "local-dev-secret"
+$env:DEBUG = "true"                  # enables plain-HTTP local serving
+$env:EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+```
+
+macOS/Linux:
+
+```bash
+export SECRET_KEY=local-dev-secret DEBUG=true \
+       EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+```
+
+Without `DATABASE_URL` the app uses `db.sqlite3`. Without `CLOUDINARY_URL` uploads are saved to `./media`. Both files are git-ignored.
+
+### 3. Migrate, create an admin user and run
+
+```powershell
 python manage.py migrate
-5. Create Admin User
-Bash
 python manage.py createsuperuser
-# Follow the prompts to set a username and password
-6. Run the Server
-Bash
 python manage.py runserver
-Visit http://127.0.0.1:8000 in your browser.
+```
 
-## 🚀 Production release checklist
+Open http://127.0.0.1:8000. The admin is at http://127.0.0.1:8000/admin/.
 
-The live Render service should continue tracking the production branch. Test changes on the
-`staging` branch using the separate staging configuration in
-`render.staging.yaml` before merging to production. See
-`docs/staging-deployment.md` for the non-destructive promotion process.
+> Do not run `makemigrations` casually. Migrations are committed. Create new ones only for a reviewed model change.
 
-Set these environment variables in Render before deploying:
+### 4. Checks before every commit
+
+These are the same checks CI runs:
+
+```powershell
+ruff check .
+python manage.py check --deploy
+python manage.py makemigrations --check --dry-run
+python manage.py test
+git diff --check
+```
+
+---
+
+## 🌿 Branches and releases
+
+| Branch | Deploys to |
+|---|---|
+| `main` | **Production**: Render auto-deploys every push |
+| `staging` | Render staging service (`render.staging.yaml`) |
+| `feature/*`, `hotfix/*` | Nothing. Merge into `staging` first |
+
+Changes go `feature/*` → `staging` → verify on staging → `main`. See [`docs/staging-deployment.md`](docs/staging-deployment.md) for the promotion process. Open risks are tracked in [`docs/architecture-audit.md`](docs/architecture-audit.md).
+
+---
+
+## 🔐 Production configuration
+
+Set these in Render's environment settings. Never commit them.
 
 ```text
 SECRET_KEY=<long-random-production-secret>
 ALLOWED_HOSTS=emanhomes.com,www.emanhomes.com
 CSRF_TRUSTED_ORIGINS=https://emanhomes.com,https://www.emanhomes.com
 DATABASE_URL=<managed-postgresql-url>
+CLOUDINARY_URL=<cloudinary-connection-url>
 EMAIL_HOST_PASSWORD=<gmail-app-password-or-smtp-secret>
 LEAD_NOTIFICATION_EMAIL=<inbox-for-new-leads>
-CLOUDINARY_URL=<cloudinary-connection-url>
 ANALYTICS_MEASUREMENT_ID=<optional-ga4-measurement-id>
 ```
 
-`SECRET_KEY` is required; the application intentionally fails to start if it is
-missing. Generate a value with `python -c "from secrets import token_urlsafe;
-print(token_urlsafe(64))"` and save it only in Render's environment settings.
-If the old committed fallback key was ever used in production, rotate it before
-the next deploy; this will invalidate existing Django sessions.
+Safety rails:
 
-Use the following Render commands:
+* The app will not start without `SECRET_KEY`.
+* On Render, the app will not start without `CLOUDINARY_URL`, so uploads cannot land on the ephemeral disk.
+* On Render, the app will not start with `DEBUG=true`.
+
+Generate a secret key with `python -c "from secrets import token_urlsafe; print(token_urlsafe(64))"`.
+
+Render commands:
 
 ```text
-Build:  pip install -r requirements.txt && python manage.py collectstatic --noinput --upload-unhashed-files && python manage.py migrate
-Start:  gunicorn emanhomes_project.wsgi:application
+Build:        ./build.sh
+Start:        gunicorn emanhomes_project.wsgi:application
+Health check: /healthz/
 ```
 
-After deployment:
+### After each production deploy
 
-1. Submit a general enquiry and a property enquiry; confirm both appear in `/admin/` and the notification inbox.
-2. Test WhatsApp and phone buttons on mobile and confirm the listing title is present in WhatsApp property messages.
-3. Verify `/sitemap.xml`, `/robots.txt`, canonical URLs, page descriptions, and Google Search Console.
-4. Create a database backup before migrations and retain the previous deployment for rollback.
-5. Replace generic imagery and review every listing’s price, status, availability, gallery, description, and contact details.
+1. Check that `/healthz/` returns `{"status": "ok"}`.
+2. Submit a general enquiry and a property enquiry. Confirm both appear in `/admin/` and in the notification inbox.
+3. Test the WhatsApp and phone buttons on mobile.
+4. Verify that `/sitemap.xml` and `/robots.txt` load.
+5. Back up the database before any migration, and keep the previous deploy available for rollback.
 
-📖 Usage Guide
-Logging In
-Access the admin panel at: http://127.0.0.1:8000/admin/ or https://emanhomes.com/admin/.
+---
 
-Adding a Property
-Go to Properties > Add Property.
+## 📖 Admin guide
 
-Title & Price: Enter details and select Currency (USD or GHS).
+**Adding a property:** go to *Properties → Add property*.
+* Enter the title and price, and choose the currency (USD or GHS).
+* **Media:** paste a YouTube or Instagram link, upload a main image, or both. At least one is required.
+* Enter bedrooms and bathrooms, and add gallery images with a display order.
 
-Media:
+**Adding a team member:** go to *Team members → Add*. Paste a direct image URL. Google Drive "view" links do not work.
 
-Video: Paste a YouTube or Instagram link (Recommended).
+---
 
-Image: Optional. Acts as a thumbnail if provided.
+## 📞 Contact
 
-Bed/Bath: Enter numbers manually.
+**Eman Homes Limited GH**
+📍 Dzen-Ayor, East Legon, Accra
+📱 +233 20 584 3775
+📧 emanpages@gmail.com
 
-Adding a Team Member
-Go to Team Members > Add.
-
-Image URL: Paste a direct link to the photo (e.g., Right-click a LinkedIn photo -> "Copy Image Address"). Do not upload files directly.
-
-☁️ Deployment (Render)
-This project is configured for automated deployment on Render.com.
-
-Build Command: pip install -r requirements.txt && python manage.py collectstatic --noinput --upload-unhashed-files && python manage.py migrate
-
-Start Command: gunicorn emanhomes_project.wsgi:application
-
-📞 Contact
-EmanHomes
-
-📍 Location: Dzen-Ayor, East Legon, Accra
-
-📱 Phone: +233 20 584 3775
-
-📧 Email: emanpages@gmail.com
-
-© 2026 EmanHomes. All Rights Reserved.
+© Eman Homes Limited GH. All rights reserved.
