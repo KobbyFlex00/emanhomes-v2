@@ -1,9 +1,17 @@
+import importlib
+import smtplib
+from decimal import Decimal
+
+from django.apps import apps as django_apps
+from django.contrib.auth.models import Group, User
 from django.core import mail
+from django.core.exceptions import ValidationError
+from django.core.mail.backends.base import BaseEmailBackend
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .forms import ContactForm
-from .models import ContactMessage, Property
+from .models import ContactMessage, Property, SiteConfiguration
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -58,6 +66,7 @@ class ContactWorkflowTests(TestCase):
             'message': 'I would like to view a house.',
             'inquiry_type': 'viewing',
             'preferred_contact': 'whatsapp',
+            'phone': '+233 20 584 0000',
             'consent_to_contact': 'on',
         })
         self.assertRedirects(response, reverse('contact'))
@@ -80,6 +89,7 @@ class ContactWorkflowTests(TestCase):
             'message': 'I would like to arrange a viewing.',
             'inquiry_type': 'property',
             'preferred_contact': 'phone',
+            'phone': '+233 20 584 0000',
             'consent_to_contact': 'on',
         })
         self.assertEqual(response.status_code, 302)
@@ -93,6 +103,7 @@ class ContactWorkflowTests(TestCase):
             'message': 'Please contact me.',
             'inquiry_type': 'general',
             'preferred_contact': 'email',
+            'phone': '+233 20 584 0000',
             'consent_to_contact': 'on',
             'source': 'x' * 500,
         })
@@ -107,6 +118,7 @@ class ContactWorkflowTests(TestCase):
             'message': 'Please contact me.',
             'inquiry_type': 'general',
             'preferred_contact': 'email',
+            'phone': '+233 20 584 0000',
             'consent_to_contact': 'on',
         })
         self.assertEqual(ContactMessage.objects.get().source, 'website')
@@ -240,3 +252,278 @@ class BusinessHoursTests(TestCase):
         response = self.client.get(reverse('home'))
         self.assertContains(response, 'Open 24 hours')
         self.assertNotContains(response, 'Closed')
+
+
+# --- Phase 2: publication, pricing, enquiries, roles ---------------------------------
+
+
+
+
+
+class FailingEmailBackend(BaseEmailBackend):
+    def send_messages(self, email_messages):
+        raise smtplib.SMTPException('SMTP server unavailable')
+
+
+def make_property(**overrides):
+    fields = {
+        'title': 'Three bedroom house in Oyarifa',
+        'category': 'residential',
+        'location': 'Oyarifa',
+        'description': 'Family home',
+        'price': Decimal('250000'),
+        'video_url': 'https://www.instagram.com/reel/ABC123/',
+    }
+    fields.update(overrides)
+    return Property.objects.create(**fields)
+
+
+ENQUIRY = {
+    'name': 'Ama Mensah',
+    'email': 'ama@example.com',
+    'phone': '+233 24 000 0000',
+    'subject': 'Viewing',
+    'message': 'I would like to view this property.',
+    'inquiry_type': 'property',
+    'preferred_contact': 'whatsapp',
+    'consent_to_contact': 'on',
+}
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PublicationVisibilityTests(TestCase):
+    def setUp(self):
+        self.published = make_property(title='Published plot', category='land')
+        self.draft = make_property(title='Draft plot', category='land', publication_status=Property.DRAFT)
+        self.archived = make_property(title='Archived plot', category='land', publication_status=Property.ARCHIVED)
+
+    def test_listing_page_shows_only_published(self):
+        response = self.client.get(reverse('properties_list'))
+        self.assertContains(response, 'Published plot')
+        self.assertNotContains(response, 'Draft plot')
+        self.assertNotContains(response, 'Archived plot')
+
+    def test_home_shows_only_published(self):
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'Draft plot')
+        land = next(c for c in response.context['categories'] if c['key'] == 'land')
+        self.assertEqual(land['count'], 1)
+
+    def test_hidden_listing_detail_returns_404(self):
+        for hidden in (self.draft, self.archived):
+            response = self.client.get(reverse('property_detail', args=[hidden.slug]))
+            self.assertEqual(response.status_code, 404)
+
+    def test_sitemap_excludes_hidden_listings(self):
+        response = self.client.get('/sitemap.xml')
+        self.assertContains(response, self.published.slug)
+        self.assertNotContains(response, self.draft.slug)
+        self.assertNotContains(response, self.archived.slug)
+
+    def test_enquiry_cannot_be_linked_to_hidden_listing(self):
+        self.client.post(f"{reverse('contact')}?property={self.draft.slug}", ENQUIRY)
+        self.assertIsNone(ContactMessage.objects.get().property)
+
+    def test_sold_listing_stays_visible_marked_sold_after_available(self):
+        Property.objects.all().delete()
+        make_property(title='Sold house', status='sold', is_featured=True)
+        make_property(title='Available house')
+        response = self.client.get(reverse('properties_list'))
+        titles = [p.title for p in response.context['properties']]
+        self.assertEqual(titles, ['Available house', 'Sold house'])
+        self.assertContains(response, '>Sold<')
+
+    def test_sold_listing_detail_is_public_without_calculator(self):
+        sold = make_property(title='Sold villa', status='sold')
+        response = self.client.get(reverse('property_detail', args=[sold.slug]))
+        self.assertContains(response, 'Sold')
+        self.assertNotContains(response, 'Payment Calculator')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PricingAndSearchTests(TestCase):
+    def test_price_display_formats(self):
+        self.assertEqual(make_property(price=Decimal('250000')).price_display, '$250,000')
+        self.assertEqual(
+            make_property(title='Rental', currency='GHS', price=Decimal('1500.50')).price_display,
+            'GH₵1,500.50',
+        )
+
+    def test_contact_for_price_listing(self):
+        listing = make_property(title='Price on request plot', price=None)
+        self.assertContains(self.client.get(reverse('properties_list')), 'Contact for price')
+        detail = self.client.get(reverse('property_detail', args=[listing.slug]))
+        self.assertContains(detail, 'Contact for price')
+        self.assertNotContains(detail, 'Payment Calculator')
+
+    def test_malformed_filters_are_ignored_not_errors(self):
+        make_property()
+        for params in ({'min_price': 'abc'}, {'max_price': '1e999'}, {'bedrooms': 'x'}, {'min_price': '-5'}):
+            response = self.client.get(reverse('properties_list'), params)
+            self.assertEqual(response.status_code, 200, params)
+            self.assertEqual(response.context['properties'].paginator.count, 1, params)
+
+    def test_search_by_reference_number(self):
+        listing = make_property()
+        response = self.client.get(reverse('properties_list'), {'q': listing.reference_number.lower()})
+        self.assertEqual(response.context['properties'].paginator.count, 1)
+
+    def test_duplicate_titles_get_unique_slugs(self):
+        first = make_property(title='Plot in Aburi')
+        second = make_property(title='Plot in Aburi')
+        self.assertEqual(first.slug, 'plot-in-aburi')
+        self.assertEqual(second.slug, 'plot-in-aburi-2')
+
+    def test_negative_price_is_rejected(self):
+        listing = Property(title='Bad', category='land', location='X', description='X',
+                           price=Decimal('-1'), video_url='https://youtu.be/abc')
+        with self.assertRaises(ValidationError):
+            listing.full_clean()
+
+
+class VideoEmbedTests(TestCase):
+    def embed(self, url):
+        return Property(video_url=url).get_embed_url()
+
+    def test_supported_links(self):
+        cases = {
+            'https://www.youtube.com/watch?v=abc123&t=30s': 'https://www.youtube.com/embed/abc123',
+            'https://youtu.be/abc123?si=x': 'https://www.youtube.com/embed/abc123',
+            'https://www.youtube.com/shorts/abc123': 'https://www.youtube.com/embed/abc123',
+            'https://www.instagram.com/reel/DZSjYCLsITq/?igsh=1': 'https://www.instagram.com/reel/DZSjYCLsITq/embed',
+            'https://instagram.com/p/DZUED9ZjKEN': 'https://www.instagram.com/p/DZUED9ZjKEN/embed',
+        }
+        for url, expected in cases.items():
+            self.assertEqual(self.embed(url), expected, url)
+
+    def test_other_sites_are_never_embedded(self):
+        for url in ('https://evil.example/watch?v=1', 'https://youtube.com.evil.example/watch?v=1',
+                    'javascript:alert(1)', 'https://www.youtube.com/'):
+            self.assertIsNone(self.embed(url), url)
+
+    def test_admin_validation_rejects_unsupported_video(self):
+        listing = Property(title='X', category='land', location='X', description='X',
+                           price=1, video_url='https://vimeo.com/123')
+        with self.assertRaises(ValidationError) as ctx:
+            listing.full_clean()
+        self.assertIn('video_url', ctx.exception.message_dict)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', SECURE_SSL_REDIRECT=False)
+class EnquiryPhase2Tests(TestCase):
+    def test_phone_is_required_and_validated(self):
+        for phone in ('', 'call me', '12', '+233 ' + '9' * 20):
+            data = dict(ENQUIRY, phone=phone)
+            response = self.client.post(reverse('contact'), data)
+            self.assertEqual(response.status_code, 200, phone)
+            self.assertIn('phone', response.context['form'].errors, phone)
+        self.assertFalse(ContactMessage.objects.exists())
+
+    def test_consent_must_be_given_explicitly(self):
+        data = {k: v for k, v in ENQUIRY.items() if k != 'consent_to_contact'}
+        response = self.client.post(reverse('contact'), data)
+        self.assertContains(response, 'Please confirm we may contact you')
+        self.assertFalse(ContactMessage.objects.exists())
+
+    def test_property_page_form_requires_visible_consent(self):
+        listing = make_property()
+        response = self.client.get(reverse('property_detail', args=[listing.slug]))
+        self.assertContains(response, 'id="enquiry-consent" name="consent_to_contact" required')
+        self.assertNotContains(response, 'name="consent_to_contact" value="on"')
+
+    def test_overlong_message_is_rejected(self):
+        response = self.client.post(reverse('contact'), dict(ENQUIRY, message='x' * 3001))
+        self.assertIn('message', response.context['form'].errors)
+
+    def test_notification_includes_phone_and_listing_and_is_recorded(self):
+        listing = make_property(title='Land at Aburi')
+        self.client.post(f"{reverse('contact')}?property={listing.slug}", ENQUIRY)
+        enquiry = ContactMessage.objects.get()
+        self.assertIsNotNone(enquiry.notification_sent_at)
+        self.assertEqual(enquiry.notification_error, '')
+        body = mail.outbox[0].body
+        self.assertIn('+233 24 000 0000', body)
+        self.assertIn(listing.reference_number, body)
+        self.assertIn(f'/property/{listing.slug}/', body)
+        self.assertIn(f'/admin/core/contactmessage/{enquiry.pk}/change/', body)
+        self.assertIn('Land at Aburi', mail.outbox[0].subject)
+
+    def test_newlines_in_name_cannot_inject_email_headers(self):
+        self.client.post(reverse('contact'), dict(ENQUIRY, name='Ama\nBcc: victim@example.com'))
+        self.assertNotIn('\n', mail.outbox[0].subject)
+
+    @override_settings(EMAIL_BACKEND='core.tests.FailingEmailBackend')
+    def test_email_failure_keeps_enquiry_and_reassures_visitor(self):
+        with self.assertLogs('core.views', level='ERROR'):
+            response = self.client.post(reverse('contact'), ENQUIRY, follow=True)
+        enquiry = ContactMessage.objects.get()
+        self.assertIn('SMTPException', enquiry.notification_error)
+        self.assertIsNone(enquiry.notification_sent_at)
+        self.assertContains(response, 'Your enquiry has been received')
+        self.assertNotContains(response, 'delayed')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SiteConfigurationTests(TestCase):
+    def test_footer_uses_configured_hours_and_socials(self):
+        SiteConfiguration.objects.create(
+            business_hours='Open 24 hours, every day', tiktok='https://www.tiktok.com/@emanhomesltd',
+        )
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Open 24 hours, every day')
+        self.assertContains(response, 'href="https://www.tiktok.com/@emanhomesltd"')
+        self.assertContains(response, 'aria-label="EmanHomes on TikTok"')
+
+    def test_whatsapp_number_is_digits_only(self):
+        config = SiteConfiguration(whatsapp_phone='+233 20 584 3775')
+        self.assertEqual(config.whatsapp_number, '233205843775')
+
+    def test_social_link_migration_fills_only_empty_fields(self):
+        migration = importlib.import_module('core.migrations.0013_fill_official_social_links')
+        empty = SiteConfiguration.objects.create(twitter=None, linkedin='https://linkedin.com/custom')
+        migration.fill_empty_social_links(django_apps, None)
+        empty.refresh_from_db()
+        self.assertEqual(empty.twitter, 'https://x.com/eman_homes')
+        self.assertEqual(empty.linkedin, 'https://linkedin.com/custom')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class StaffRolesAndAdminTests(TestCase):
+    def test_roles_exist_with_least_privilege(self):
+        def perms(name):
+            return set(Group.objects.get(name=name).permissions.values_list('codename', flat=True))
+
+        self.assertIn('change_property', perms('Property managers'))
+        self.assertEqual(perms('Enquiry managers'), {'change_contactmessage', 'view_contactmessage', 'view_property'})
+        self.assertNotIn('delete_contactmessage', perms('Property managers'))
+        self.assertIn('change_siteconfiguration', perms('Content editors'))
+
+    def test_admin_requires_login(self):
+        response = self.client.get('/admin/core/contactmessage/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/admin/login/', response['Location'])
+
+    def test_enquiry_manager_cannot_edit_listings(self):
+        user = User.objects.create_user('enquiries', password='pw-12345!x', is_staff=True)
+        user.groups.add(Group.objects.get(name='Enquiry managers'))
+        self.client.force_login(user)
+        listing = make_property()
+        self.assertEqual(self.client.get('/admin/core/contactmessage/').status_code, 200)
+        self.assertEqual(self.client.get(f'/admin/core/property/{listing.pk}/change/').status_code, 200)
+        response = self.client.post(f'/admin/core/property/{listing.pk}/change/', {'title': 'Changed'})
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_actions_publish_and_mark_sold(self):
+        admin_user = User.objects.create_superuser('boss', 'boss@example.com', 'pw-12345!x')
+        self.client.force_login(admin_user)
+        draft = make_property(publication_status=Property.DRAFT)
+        for action in ('publish', 'mark_sold'):
+            self.client.post('/admin/core/property/', {'action': action, '_selected_action': [draft.pk]})
+        draft.refresh_from_db()
+        self.assertEqual(draft.publication_status, Property.PUBLISHED)
+        self.assertEqual(draft.status, 'sold')
+
+    def test_enquiries_cannot_be_created_in_admin(self):
+        admin_user = User.objects.create_superuser('boss', 'boss@example.com', 'pw-12345!x')
+        self.client.force_login(admin_user)
+        self.assertEqual(self.client.get('/admin/core/contactmessage/add/').status_code, 403)

@@ -8,6 +8,26 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Run against PostgreSQL, the same engine as staging and production,
+    # so migrations are exercised the way they will run on deploy.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: emanhomes
+          POSTGRES_PASSWORD: emanhomes
+          POSTGRES_DB: emanhomes
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U emanhomes"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks
+      DATABASE_URL: postgres://emanhomes:emanhomes@localhost:5432/emanhomes
+      DATABASE_SSL_REQUIRE: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,14 +37,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
       - run: python manage.py check --deploy
-        env:
-          SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks
       - run: python manage.py makemigrations --check --dry-run
-        env:
-          SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks
+      - run: python manage.py migrate --noinput
       - run: python manage.py test
-        env:
-          SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks
       - run: python manage.py collectstatic --noinput --upload-unhashed-files
-        env:
-          SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks

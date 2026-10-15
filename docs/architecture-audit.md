@@ -197,3 +197,16 @@ It is still in git history (I have not printed the value). The README already sa
 - R9 fixed: all dependencies pinned. Now on Django 5.2 LTS, gunicorn 23 and whitenoise 6.12.
 - R14 fixed: `DEBUG` is read from the environment (default off, refused on Render). The HTTPS redirect, secure cookies and HSTS are derived from it.
 - Added `/healthz/`, branded 404 and self-contained 500 pages, a 10-second `EMAIL_TIMEOUT`, stdout logging, Ruff in CI, and `.env.example`. Rewrote the README.
+
+**2026-10-15: Phase 2 (`feature/phase2-data-admin`)**
+- R3 fixed: listings have `publication_status` (draft/published/archived). Existing listings migrate as *published*. Drafts and archived listings are hidden from pages, search, the sitemap and enquiry links. Per Eman Homes policy, Sold and the new Rented listings stay visible, badged, and sort after available ones.
+- R6 fixed: enquiries require a validated phone number. The property-page form no longer auto-ticks consent; it shows a real checkbox.
+- R7 (partly): notification failures are recorded on the enquiry (`notification_sent_at` / `notification_error`). Visitors always see a success message once the enquiry is saved. The staff email now includes phone, property reference, listing link and admin link. Rate limiting is still open (Phase 4).
+- R8 fixed: business hours, WhatsApp (+233 20 584 3775, confirmed), TikTok, X, LinkedIn, YouTube and Linktree come from Site Configuration. Empty X/LinkedIn fields are filled from the PRD. Facebook is unchanged pending confirmation.
+- R11 fixed: a blank price shows "Contact for price"; the payment calculator is hidden for those and for sold/rented listings.
+- R12 fixed: video embeds are allow-listed to YouTube and Instagram and parsed properly.
+- R13 (partly): `updated_at` added and used for sitemap `lastmod`; per-listing SEO title and description.
+- New findings, fixed: malformed price/bedroom filters caused 500s; duplicate listing titles caused a save error (slugs are now unique).
+- Admin: listing actions (publish, draft, archive, sold, rented), editable status columns, image previews and alt text. Enquiry details are read-only, with a notification indicator. Roles are kept in sync on every migrate: Property managers, Enquiry managers (no delete), Content editors.
+- CI runs on PostgreSQL 16 so migrations are tested on the production engine.
+- Removed the unconfirmed "Price is negotiable" tooltip.
