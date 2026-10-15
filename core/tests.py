@@ -775,6 +775,20 @@ class LegalPageTests(TestCase):
         self.assertEqual(self.client.get('/admin/core/legalpage/add/').status_code, 403)
         self.assertEqual(self.client.get(f'/admin/core/legalpage/{privacy.pk}/delete/').status_code, 403)
 
+    def test_staff_with_edit_permission_still_cannot_publish(self):
+        from django.contrib.auth.models import Permission
+        editor = User.objects.create_user('legal-editor', password='pw-12345!x', is_staff=True)
+        editor.user_permissions.add(*Permission.objects.filter(codename__in=['change_legalpage', 'view_legalpage']))
+        self.client.force_login(editor)
+        privacy = LegalPage.objects.get(slug='privacy')
+        self.client.post(f'/admin/core/legalpage/{privacy.pk}/change/', {
+            'title': 'Privacy policy', 'body': 'Edited draft', 'status': 'published', 'approval_note': 'self-approved',
+        })
+        privacy.refresh_from_db()
+        self.assertEqual(privacy.body, 'Edited draft')
+        self.assertEqual(privacy.status, LegalPage.DRAFT)
+        self.assertEqual(privacy.approval_note, '')
+
     def test_content_roles_cannot_publish_legal_pages(self):
         for group in Group.objects.all():
             self.assertFalse(group.permissions.filter(codename='change_legalpage').exists(), group.name)

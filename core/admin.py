@@ -161,6 +161,12 @@ class LegalPageAdmin(admin.ModelAdmin):
     fields = ('slug', 'title', 'status', 'approval_note', 'body', 'updated_at')
     readonly_fields = ('slug', 'updated_at')
 
+    def get_readonly_fields(self, request, obj=None):
+        # Publishing makes legal wording public, so only superusers may change the status.
+        if request.user.is_superuser:
+            return self.readonly_fields
+        return (*self.readonly_fields, 'status', 'approval_note')
+
     def has_add_permission(self, request):
         return False  # The privacy policy and terms pages are created by migration.
 
