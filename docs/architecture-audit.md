@@ -218,3 +218,8 @@ It is still in git history (I have not printed the value). The README already sa
 - The honeypot is now an off-screen text input; the old hidden input was skipped by most bots. A signed timestamp discards forms submitted within 3 seconds of loading. Caught submissions see the normal thank-you page, and nothing is saved or emailed.
 - New `/contact/thank-you/` page (noindex) with WhatsApp and call options, and a GA4 `generate_lead` event when analytics is configured.
 - Limitation: the rate-limit counter lives in each worker's memory (no shared cache), so with N gunicorn workers the effective limit is up to N × 10. That's acceptable for spam friction. Move to a shared cache if abuse appears.
+
+**2026-10-15: Legal pages and official Facebook (`feature/legal-pages-facebook`)**
+- Facebook confirmed by Eman Homes as https://www.facebook.com/emanhomesofficial. It is now the model default, and the migration replaces the old `facebook.com/emanhomes` value. A custom value entered by staff is kept.
+- Privacy policy and Terms of use are seeded as **drafts** (`LegalPage`), edited in Admin. The drafts were written by the developer based on the Data Protection Act, 2012 (Act 843) and contain `[TO CONFIRM]` items. **They are not legally approved.** While in draft they return 404 to the public; signed-in staff see them with a "DRAFT – not legally approved" banner. Publishing a page (superusers only; no staff role has the permission) adds the footer links, the "See our privacy policy" link by the consent checkbox, and the sitemap entry.
+- Staff-entered legal text is rendered with a restricted formatter (headings, bullets, paragraphs, auto-linked emails and URLs). All HTML is escaped.

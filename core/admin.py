@@ -5,7 +5,7 @@ from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 
-from .models import ContactMessage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
+from .models import ContactMessage, LegalPage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
 
 logger = logging.getLogger(__name__)
 
@@ -153,3 +153,19 @@ class ContactMessageAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Enquiries come from the website forms; staff update their status here.
         return False
+
+
+@admin.register(LegalPage)
+class LegalPageAdmin(admin.ModelAdmin):
+    list_display = ('title', 'status', 'approval_note', 'updated_at')
+    fields = ('slug', 'title', 'status', 'approval_note', 'body', 'updated_at')
+    readonly_fields = ('slug', 'updated_at')
+
+    def has_add_permission(self, request):
+        return False  # The privacy policy and terms pages are created by migration.
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def view_on_site(self, obj):
+        return f'/{obj.slug}/'

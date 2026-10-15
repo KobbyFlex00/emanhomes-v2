@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+{% load content %}
+
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}{{ page.title }} for the EmanHomes website.{% endblock %}
+{% block extra_head %}{% if not page.is_published %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+
+{% block content %}
+<article class="container py-5" style="max-width: 50rem;">
+    {% if not page.is_published %}
+    <div class="alert alert-danger" role="alert">
+        <strong>DRAFT – not legally approved.</strong>
+        Only signed-in staff can see this page. Publish it in Admin only after a Ghana-qualified
+        lawyer has reviewed the wording and every <code>[TO CONFIRM]</code> item is resolved.
+    </div>
+    {% endif %}
+    <h1 class="fw-bold text-primary-custom mb-2">{{ page.title }}</h1>
+    <p class="text-muted small mb-4">Last updated {{ page.updated_at|date:"j F Y" }}</p>
+    <div class="legal-body">
+        {{ page.body|simple_format }}
+    </div>
+</article>
+{% endblock %}

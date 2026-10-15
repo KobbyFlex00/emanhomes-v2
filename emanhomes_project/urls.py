@@ -9,8 +9,17 @@ from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
 from django.urls import path, reverse
 
-from core.models import Property
-from core.views import about, contact, enquiry_thanks, health_check, home, properties_list, property_detail
+from core.models import LegalPage, Property
+from core.views import (
+    about,
+    contact,
+    enquiry_thanks,
+    health_check,
+    home,
+    legal_page,
+    properties_list,
+    property_detail,
+)
 
 
 class StaticSitemap(Sitemap):
@@ -22,6 +31,20 @@ class StaticSitemap(Sitemap):
 
     def location(self, item):
         return reverse(item)
+
+
+class LegalSitemap(Sitemap):
+    priority = 0.3
+    changefreq = 'yearly'
+
+    def items(self):
+        return LegalPage.objects.filter(status=LegalPage.PUBLISHED)
+
+    def lastmod(self, item):
+        return item.updated_at
+
+    def location(self, item):
+        return reverse(item.slug)  # URL names match the slugs: 'privacy', 'terms'
 
 
 class PropertySitemap(Sitemap):
@@ -46,7 +69,9 @@ urlpatterns = [
     path('property/<slug:slug>/', property_detail, name='property_detail'),
     path('contact/', contact, name='contact'),
     path('contact/thank-you/', enquiry_thanks, name='enquiry_thanks'),
-    path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap}}, name='django.contrib.sitemaps.views.sitemap'),
+    path('privacy/', legal_page, {'slug': 'privacy'}, name='privacy'),
+    path('terms/', legal_page, {'slug': 'terms'}, name='terms'),
+    path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap, 'legal': LegalSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', lambda request: HttpResponse(
         f"User-agent: *\nAllow: /\nSitemap: {request.build_absolute_uri(reverse('django.contrib.sitemaps.views.sitemap'))}\n",
         content_type='text/plain'
