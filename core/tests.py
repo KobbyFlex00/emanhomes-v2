@@ -1,5 +1,6 @@
 import importlib
 import smtplib
+from datetime import timedelta
 from decimal import Decimal
 
 from django.apps import apps as django_apps
@@ -9,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail.backends.base import BaseEmailBackend
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from .forms import ContactForm
 from .models import ContactMessage, Property, SiteConfiguration
@@ -365,8 +367,20 @@ class PricingAndSearchTests(TestCase):
 
     def test_search_by_reference_number(self):
         listing = make_property()
+        make_property(title='Unrelated plot', location='Kasoa', description='Other')
         response = self.client.get(reverse('properties_list'), {'q': listing.reference_number.lower()})
-        self.assertEqual(response.context['properties'].paginator.count, 1)
+        self.assertEqual([p.pk for p in response.context['properties']], [listing.pk])
+
+    def test_unusual_filter_values_do_not_error(self):
+        make_property()
+        for params in ({'bedrooms': '\u00b2'}, {'bedrooms': '9' * 5000}, {'min_price': '1e100'}):
+            response = self.client.get(reverse('properties_list'), params)
+            self.assertEqual(response.status_code, 200, params)
+
+    def test_huge_min_price_matches_nothing_rather_than_everything(self):
+        make_property()
+        response = self.client.get(reverse('properties_list'), {'min_price': '1e100'})
+        self.assertEqual(response.context['properties'].paginator.count, 0)
 
     def test_duplicate_titles_get_unique_slugs(self):
         first = make_property(title='Plot in Aburi')
@@ -397,7 +411,7 @@ class VideoEmbedTests(TestCase):
             self.assertEqual(self.embed(url), expected, url)
 
     def test_other_sites_are_never_embedded(self):
-        for url in ('https://evil.example/watch?v=1', 'https://youtube.com.evil.example/watch?v=1',
+        for url in ('http://[broken/watch?v=1', 'https://evil.example/watch?v=1', 'https://youtube.com.evil.example/watch?v=1',
                     'javascript:alert(1)', 'https://www.youtube.com/'):
             self.assertIsNone(self.embed(url), url)
 
@@ -496,7 +510,7 @@ class StaffRolesAndAdminTests(TestCase):
         self.assertIn('change_property', perms('Property managers'))
         self.assertEqual(perms('Enquiry managers'), {'change_contactmessage', 'view_contactmessage', 'view_property'})
         self.assertNotIn('delete_contactmessage', perms('Property managers'))
-        self.assertIn('change_siteconfiguration', perms('Content editors'))
+        self.assertTrue({'add_siteconfiguration', 'change_siteconfiguration'} <= perms('Content editors'))
 
     def test_admin_requires_login(self):
         response = self.client.get('/admin/core/contactmessage/')
@@ -527,3 +541,41 @@ class StaffRolesAndAdminTests(TestCase):
         admin_user = User.objects.create_superuser('boss', 'boss@example.com', 'pw-12345!x')
         self.client.force_login(admin_user)
         self.assertEqual(self.client.get('/admin/core/contactmessage/add/').status_code, 403)
+
+
+class ZeroDowntimeMigrationTests(TestCase):
+    """Code from the previous release keeps running while a deploy's migrations apply."""
+
+    def test_previous_release_can_still_insert_enquiries_and_listings(self):
+        from django.db import connection
+
+        with connection.cursor() as cursor:
+            # Exactly the columns the previous release knew about.
+            cursor.execute(
+                "INSERT INTO core_contactmessage (name, email, subject, message, inquiry_type, preferred_contact,"
+                " source, consent_to_contact, lead_status, internal_notes, created_at)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                ['Old worker', 'old@example.com', 'Hi', 'Saved mid-deploy', 'general', 'email',
+                 'website', True, 'new', '', timezone.now()],
+            )
+            cursor.execute(
+                "INSERT INTO core_property (title, slug, reference_number, category, status, is_featured, currency,"
+                " price, location, description, property_size_unit, amenities, bedrooms, bathrooms, main_image,"
+                " video_url, created_at)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                ['Old listing', 'old-listing', 'EH-OLD', 'land', 'for_sale', False, 'GHS', 1000, 'Aburi', 'Plot',
+                 'plots', '', 0, 0, '', '', timezone.now()],
+            )
+        enquiry = ContactMessage.objects.get(name='Old worker')
+        self.assertEqual((enquiry.phone, enquiry.notification_error), ('', ''))
+        listing = Property.objects.get(slug='old-listing')
+        self.assertEqual(listing.publication_status, Property.PUBLISHED)
+        self.assertIsNotNone(listing.updated_at)
+
+    def test_backfill_uses_creation_time_for_existing_listings(self):
+        migration = importlib.import_module('core.migrations.0014_db_defaults_and_updated_at_backfill')
+        listing = make_property()
+        Property.objects.filter(pk=listing.pk).update(created_at=timezone.now() - timedelta(days=200))
+        migration.backfill_updated_at(django_apps, None)
+        listing.refresh_from_db()
+        self.assertEqual(listing.updated_at, listing.created_at)

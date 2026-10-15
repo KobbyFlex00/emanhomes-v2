@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.functions import Now
 from django.template.defaultfilters import floatformat
 from django.utils.text import slugify
 
@@ -20,7 +21,9 @@ class SiteConfiguration(models.Model):
     email = models.EmailField(default="emanpages@gmail.com")
     address = models.TextField(default="Dzen-Ayor, East Legon, Accra, Ghana")
 
-    business_hours = models.CharField(max_length=100, default="Open 24 hours, 7 days a week")
+    business_hours = models.CharField(
+        max_length=100, default="Open 24 hours, 7 days a week", db_default="Open 24 hours, 7 days a week"
+    )
 
     # Social Media
     facebook = models.URLField(blank=True, null=True, default="https://www.facebook.com/emanhomes")
@@ -30,7 +33,7 @@ class SiteConfiguration(models.Model):
     tiktok = models.URLField("TikTok", blank=True, null=True, default="https://www.tiktok.com/@emanhomesltd")
     youtube = models.URLField("YouTube", blank=True, null=True)
     linktree = models.URLField("Linktree", blank=True, null=True, default="https://linktr.ee/emanhomes")
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, db_default=Now())
 
     def __str__(self):
         return "Site Configuration"
@@ -112,7 +115,7 @@ class Property(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale')
     publication_status = models.CharField(
-        max_length=20, choices=PUBLICATION_CHOICES, default=PUBLISHED, db_index=True,
+        max_length=20, choices=PUBLICATION_CHOICES, default=PUBLISHED, db_default=PUBLISHED, db_index=True,
         help_text="Only published listings appear on the website.",
     )
     is_featured = models.BooleanField(default=False)
@@ -139,13 +142,16 @@ class Property(models.Model):
     video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
 
     # SEO
-    seo_title = models.CharField(max_length=70, blank=True, help_text="Optional. Defaults to the title.")
+    seo_title = models.CharField(
+        max_length=70, blank=True, db_default='', help_text="Optional. Defaults to the title."
+    )
     seo_description = models.CharField(
-        max_length=160, blank=True, help_text="Optional. Shown in search results; defaults to a summary."
+        max_length=160, blank=True, db_default='',
+        help_text="Optional. Shown in search results; defaults to a summary.",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, db_default=Now())
 
     objects = PropertyQuerySet.as_manager()
 
@@ -191,8 +197,11 @@ class Property(models.Model):
         """Embed URL for YouTube/Instagram links only; anything else is not embedded."""
         if not self.video_url:
             return None
-        url = urlparse(self.video_url)
-        host = (url.hostname or '').lower()
+        try:
+            url = urlparse(self.video_url)
+            host = (url.hostname or '').lower()
+        except ValueError:
+            return None
         parts = [part for part in url.path.split('/') if part]
 
         if host in YOUTUBE_HOSTS:
@@ -244,7 +253,7 @@ class ContactMessage(models.Model):
 
     name = models.CharField(max_length=100)
     email = models.EmailField()
-    phone = models.CharField(max_length=30, blank=True)
+    phone = models.CharField(max_length=30, blank=True, db_default='')
     subject = models.CharField(max_length=200, default="New Inquiry")
     message = models.TextField()
     inquiry_type = models.CharField(max_length=20, choices=INQUIRY_CHOICES, default='general')
@@ -258,7 +267,7 @@ class ContactMessage(models.Model):
     follow_up_at = models.DateTimeField(blank=True, null=True)
     internal_notes = models.TextField(blank=True)
     notification_sent_at = models.DateTimeField(blank=True, null=True)
-    notification_error = models.CharField(max_length=255, blank=True)
+    notification_error = models.CharField(max_length=255, blank=True, db_default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -274,7 +283,7 @@ class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='gallery')
     image = models.ImageField(upload_to='properties/gallery/')
     alt_text = models.CharField(
-        max_length=200, blank=True, help_text="Describe the photo for screen readers, e.g. 'Front view of the house'."
+        max_length=200, blank=True, db_default='', help_text="Describe the photo for screen readers, e.g. 'Front view of the house'."
     )
     caption = models.CharField(max_length=200, blank=True)
     display_order = models.PositiveIntegerField(default=0)

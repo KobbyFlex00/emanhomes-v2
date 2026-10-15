@@ -33,16 +33,22 @@ def health_check(request):
     return JsonResponse({'status': 'ok'})
 
 
+MAX_PRICE_FILTER = Decimal('9999999999.99')  # largest value Property.price can hold
+
+
 def _decimal_param(value):
     try:
         number = Decimal(value)
     except (InvalidOperation, ValueError):
         return None
-    return number if number.is_finite() and number >= 0 else None
+    if not number.is_finite() or number < 0:
+        return None
+    return min(number, MAX_PRICE_FILTER)
 
 
 def _int_param(value):
-    return int(value) if value.isdigit() else None
+    # ASCII digits only: str.isdigit() also accepts characters such as '²' that int() rejects.
+    return int(value) if value.isascii() and value.isdigit() and len(value) <= 3 else None
 
 
 def filter_properties(request):
