@@ -104,10 +104,26 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# --- MEDIA (Cloudinary) ---
+# Render's disk is ephemeral, so hosted environments must store uploads in
+# Cloudinary. Local development and CI fall back to the filesystem.
+cloudinary.config(
+    secure=True
+)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+USE_CLOUDINARY_MEDIA = bool(os.environ.get('CLOUDINARY_URL'))
+if os.environ.get('RENDER') and not USE_CLOUDINARY_MEDIA:
+    raise ImproperlyConfigured('CLOUDINARY_URL must be set on Render so media uploads persist.')
+
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if USE_CLOUDINARY_MEDIA
+            else 'django.core.files.storage.FileSystemStorage'
+        ),
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
@@ -115,13 +131,6 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# --- CLOUDINARY (Secure Images Fix) ---
-cloudinary.config(
-    secure=True
-)
-MEDIA_URL = '/media/'
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # --- SECURITY (HTTPS Fix) ---
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
