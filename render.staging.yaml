@@ -5,6 +5,7 @@ services:
     branch: staging
     buildCommand: "./build.sh"
     startCommand: "gunicorn emanhomes_project.wsgi:application"
+    healthCheckPath: /healthz/
     envVars:
       - key: SECRET_KEY
         generateValue: true

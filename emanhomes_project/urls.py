@@ -1,16 +1,16 @@
 """
 URL configuration for emanhomes_project project.
 """
-from django.contrib import admin
-from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.sitemaps import Sitemap
 from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
-from django.urls import reverse
-from django.contrib.sitemaps import Sitemap
+from django.urls import path, reverse
+
 from core.models import Property
-from django.utils import timezone
+from core.views import about, contact, health_check, home, properties_list, property_detail
 
 
 class StaticSitemap(Sitemap):
@@ -37,10 +37,9 @@ class PropertySitemap(Sitemap):
     def location(self, item):
         return reverse('property_detail', kwargs={'slug': item.slug})
 
-from core.views import home, property_detail, contact, about, properties_list
-
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('healthz/', health_check, name='health_check'),
     path('', home, name='home'),
     path('about/', about, name='about'),
     path('properties/', properties_list, name='properties_list'),

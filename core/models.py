@@ -1,7 +1,9 @@
+from uuid import uuid4
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
-from django.core.exceptions import ValidationError
-from uuid import uuid4
+
 
 # --- Site Configuration ---
 class SiteConfiguration(models.Model):
@@ -11,7 +13,7 @@ class SiteConfiguration(models.Model):
     whatsapp_phone = models.CharField(max_length=50, default="+233 20 584 3775")
     email = models.EmailField(default="emanpages@gmail.com")
     address = models.TextField(default="Dzen-Ayor, East Legon, Accra, Ghana")
-    
+
     # Social Media
     facebook = models.URLField(blank=True, null=True, default="https://www.facebook.com/emanhomes")
     instagram = models.URLField(blank=True, null=True, default="https://www.instagram.com/emanhomes")
@@ -31,7 +33,7 @@ class TeamMember(models.Model):
     role = models.CharField(max_length=100)
     bio = models.TextField()
     image_url = models.URLField(blank=True, null=True, help_text="Paste a direct link to a .jpg/.png photo (e.g., Right-click LinkedIn photo > Copy Image Address). Google Drive 'view' links will NOT work.")
-    
+
     def __str__(self):
         return self.name
 
@@ -51,7 +53,7 @@ class Property(models.Model):
         ('residential', 'Residential House'),
         ('commercial', 'Commercial Property'),
     )
-    
+
     STATUS_CHOICES = (
         ('for_sale', 'For Sale'),
         ('for_rent', 'For Rent'),
@@ -63,24 +65,24 @@ class Property(models.Model):
         ('USD', 'USD ($)'),
         ('GHS', 'GHS (GH₵)'),
     )
-    
+
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, max_length=255)
     reference_number = models.CharField(max_length=30, unique=True, blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='for_sale')
     is_featured = models.BooleanField(default=False)
-    
+
     # CURRENCY FIELD ADDED HERE
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    
+
     location = models.CharField(max_length=200)
     description = models.TextField()
     property_size = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     property_size_unit = models.CharField(max_length=20, blank=True, default='sq ft')
     amenities = models.TextField(blank=True, help_text="One amenity per line")
-    
+
     # BED & BATH
     bedrooms = models.IntegerField(default=0, help_text="Number of bedrooms")
     bathrooms = models.IntegerField(default=0, help_text="Number of bathrooms")
@@ -88,9 +90,9 @@ class Property(models.Model):
     # MEDIA FIELDS
     main_image = models.ImageField(upload_to='properties/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text="Paste YouTube or Instagram link here")
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
@@ -110,12 +112,12 @@ class Property(models.Model):
     def get_embed_url(self):
         if not self.video_url:
             return None
-            
+
         if "youtube.com/watch?v=" in self.video_url:
             return self.video_url.replace("watch?v=", "embed/")
         elif "youtu.be/" in self.video_url:
             return self.video_url.replace("youtu.be/", "youtube.com/embed/")
-            
+
         elif "instagram.com/p/" in self.video_url or "instagram.com/reel/" in self.video_url:
             clean_url = self.video_url.split('?')[0]
             if not clean_url.endswith('/embed'):
@@ -124,7 +126,7 @@ class Property(models.Model):
                 else:
                     return clean_url + "/embed"
             return clean_url
-            
+
         return self.video_url
 
     def __str__(self):
