@@ -164,3 +164,32 @@ class BuildCommandTests(TestCase):
     def test_render_collectstatic_command_runs(self):
         from django.core.management import call_command
         call_command('collectstatic', interactive=False, dry_run=True, upload_unhashed_files=True, verbosity=0)
+
+
+class RenderHostnameTests(TestCase):
+    def test_render_hostname_is_allowed(self):
+        import os
+        import subprocess
+        import sys
+        env = {k: v for k, v in os.environ.items() if k not in ('RENDER', 'CLOUDINARY_URL')}
+        env.update(
+            SECRET_KEY='test', DJANGO_SETTINGS_MODULE='emanhomes_project.settings',
+            RENDER_EXTERNAL_HOSTNAME='eman-homes-staging.onrender.com',
+        )
+        result = subprocess.run(
+            [sys.executable, '-c',
+             'import django; django.setup(); from django.conf import settings; '
+             'print(settings.ALLOWED_HOSTS, settings.CSRF_TRUSTED_ORIGINS)'],
+            env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("'eman-homes-staging.onrender.com'", result.stdout)
+        self.assertIn("'https://eman-homes-staging.onrender.com'", result.stdout)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class BusinessHoursTests(TestCase):
+    def test_footer_shows_round_the_clock_hours(self):
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Open 24 hours')
+        self.assertNotContains(response, 'Closed')

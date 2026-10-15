@@ -26,6 +26,11 @@ CSRF_TRUSTED_ORIGINS = [
         'CSRF_TRUSTED_ORIGINS', 'https://emanhomes.com,https://www.emanhomes.com'
     ).split(',') if origin
 ]
+# Render provides each service's own hostname (e.g. the staging onrender.com URL).
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 INSTALLED_APPS = [
     'cloudinary_storage',
