@@ -157,8 +157,7 @@ class SeoEndpointTests(TestCase):
 
     def test_robots_points_to_sitemap(self):
         response = self.client.get('/robots.txt')
-        self.assertContains(response, 'Sitemap: http://testserver/sitemap.xml
-')
+        self.assertContains(response, 'Sitemap: http://testserver/sitemap.xml\n')
 
 
 class BuildCommandTests(TestCase):
