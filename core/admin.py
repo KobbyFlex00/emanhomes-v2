@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import SiteConfiguration, TeamMember, Service, Property, PropertyImage, ContactMessage
+
+from .models import ContactMessage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
+
 
 @admin.register(SiteConfiguration)
 class SiteConfigurationAdmin(admin.ModelAdmin):

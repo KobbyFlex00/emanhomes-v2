@@ -1,16 +1,33 @@
-from django.core.paginator import Paginator
-from django.db.models import Q
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.mail import send_mail
+import logging
+
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.core.paginator import Paginator
+from django.db import connection
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import urlencode
-import logging
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_safe
+
 from .forms import ContactForm
-from .models import Property, Service, TeamMember, ContactMessage
+from .models import Property, Service, TeamMember
 
 logger = logging.getLogger(__name__)
+
+
+@never_cache
+@require_safe
+def health_check(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+    except Exception:
+        logger.exception('Health check database query failed')
+        return JsonResponse({'status': 'error'}, status=503)
+    return JsonResponse({'status': 'ok'})
 
 
 def filter_properties(request):
@@ -53,7 +70,7 @@ def home(request):
         }
         for key, label in Property.CATEGORY_CHOICES
     ]
-    
+
     context = {
         'properties': properties,
         'services': services,

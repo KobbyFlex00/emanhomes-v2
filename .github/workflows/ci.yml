@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
       - run: python manage.py check --deploy
         env:
           SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-django-checks

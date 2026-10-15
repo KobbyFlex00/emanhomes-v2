@@ -119,12 +119,12 @@ class MediaStorageSettingsTests(TestCase):
         import os
         import subprocess
         import sys
-        child_env = {k: v for k, v in os.environ.items() if k not in ('RENDER', 'CLOUDINARY_URL')}
+        child_env = {k: v for k, v in os.environ.items() if k not in ('RENDER', 'CLOUDINARY_URL', 'DEBUG')}
         child_env.update(SECRET_KEY='test', DJANGO_SETTINGS_MODULE='emanhomes_project.settings', **env)
         return subprocess.run(
             [sys.executable, '-c',
              'import django; django.setup(); from django.conf import settings; '
-             'print(settings.STORAGES["default"]["BACKEND"])'],
+             'print(settings.STORAGES["default"]["BACKEND"], settings.DEBUG, settings.SECURE_SSL_REDIRECT)'],
             env=child_env, capture_output=True, text=True,
         )
 
@@ -142,3 +142,49 @@ class MediaStorageSettingsTests(TestCase):
         result = self._load_settings(RENDER='true')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('CLOUDINARY_URL must be set on Render', result.stderr)
+
+    def test_debug_defaults_off_with_https_redirect(self):
+        result = self._load_settings()
+        self.assertTrue(result.stdout.strip().endswith('False True'), result.stdout)
+
+    def test_debug_env_relaxes_https_for_local_development(self):
+        result = self._load_settings(DEBUG='true')
+        self.assertTrue(result.stdout.strip().endswith('True False'), result.stdout)
+
+    def test_debug_is_refused_on_render(self):
+        result = self._load_settings(DEBUG='true', RENDER='true', CLOUDINARY_URL='cloudinary://k:s@demo')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('DEBUG must not be enabled on Render', result.stderr)
+
+
+@override_settings(SECURE_SSL_REDIRECT=True)
+class HealthCheckTests(TestCase):
+    def test_health_check_reports_ok_over_plain_http(self):
+        response = self.client.get(reverse('health_check'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'status': 'ok'})
+        self.assertIn('no-cache', response['Cache-Control'])
+
+    def test_health_check_rejects_post(self):
+        self.assertEqual(self.client.post(reverse('health_check')).status_code, 405)
+
+    def test_other_pages_still_redirect_to_https(self):
+        self.assertEqual(self.client.get(reverse('home')).status_code, 301)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class ErrorPageTests(TestCase):
+    def test_unknown_url_uses_branded_404(self):
+        response = self.client.get('/no-such-page/')
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+        self.assertContains(response, 'Browse properties', status_code=404)
+
+    def test_missing_property_returns_404(self):
+        response = self.client.get(reverse('property_detail', kwargs={'slug': 'does-not-exist'}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_500_template_renders_without_request_context(self):
+        from django.template.loader import render_to_string
+        html = render_to_string('500.html')
+        self.assertIn('Something went wrong', html)
