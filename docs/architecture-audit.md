@@ -190,6 +190,7 @@ It is still in git history (I have not printed the value). The README already sa
 - R4 fixed: the staging Blueprint tracks the `staging` branch.
 - R5 fixed: the enquiry `source` value goes through the form and is trimmed to 100 characters.
 - **New finding, fixed:** `/sitemap.xml` returned 500 in production because `django.contrib.sitemaps` was not installed.
+- PR #2 review follow-ups: there are no uploaded images to migrate, because all 36 live listings use Instagram embeds and none reference `/media/` or Cloudinary (checked 2026-10-15). **Open (Phase 2):** clean up Cloudinary objects orphaned when an admin save fails after the upload succeeds.
 - `STATICFILES_STORAGE` is kept on purpose: the `django-cloudinary-storage` `collectstatic` command used in the build still reads it. A test now runs that command.
 
 **2026-10-15: Phase 1 (`feature/phase1-foundation`)**
