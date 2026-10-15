@@ -65,8 +65,12 @@
                 <h3 class="fw-bold text-primary-custom mb-4">Send us a Message</h3>
                 <form method="post" action="{% url 'contact' %}{% if related_property %}?property={{ related_property.slug }}{% endif %}">
                     {% csrf_token %}
-                    {{ form.website }}
+                    <div class="hp-field" aria-hidden="true"><label for="{{ form.website.id_for_label }}">Leave this field empty</label>{{ form.website }}</div>
                     {{ form.source }}
+                    {{ form.form_started }}
+                    {% for error in form.non_field_errors %}
+                    <div class="alert alert-warning" role="alert">{{ error }}</div>
+                    {% endfor %}
                     {% if form.errors %}
                     <div class="alert alert-danger" role="alert">Please review the highlighted fields and try again.</div>
                     {% endif %}

@@ -2,7 +2,6 @@ import logging
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
-from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import connection
@@ -17,6 +16,7 @@ from django.views.decorators.http import require_safe
 
 from .forms import ContactForm
 from .models import Property, Service, TeamMember
+from .spam import client_ip, form_started_token, rate_limit_exceeded
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,8 @@ def property_detail(request, slug):
         category=property.category, status__in=('for_sale', 'for_rent')
     ).exclude(pk=property.pk).order_by('-created_at')[:3]
     return render(request, 'core/property_detail.html', {
-        'property': property, 'related_properties': related_properties
+        'property': property, 'related_properties': related_properties,
+        'enquiry_token': form_started_token(),
     })
 
 
@@ -177,14 +178,24 @@ def contact(request):
     related_property = Property.objects.public().filter(slug=property_slug).first() if property_slug else None
     if request.method == 'POST':
         form = ContactForm(request.POST)
-        if form.is_valid():
+        valid = form.is_valid()
+        if rate_limit_exceeded(request):
+            logger.warning('Enquiry rate limit exceeded for %s', client_ip(request))
+            form.add_error(None, 'We have received several enquiries from your connection in a short time. '
+                                 'Please wait a few minutes, or call or WhatsApp us directly.')
+            return render(request, 'core/contact.html',
+                          {'form': form, 'related_property': related_property}, status=429)
+        if valid:
+            if form.is_likely_spam:
+                # Look successful so bots learn nothing; save and email nothing.
+                logger.info('Discarded likely spam enquiry from %s', client_ip(request))
+                return redirect('enquiry_thanks')
             inquiry = form.save(commit=False)
             inquiry.property = related_property
             inquiry.source = form.cleaned_data.get('source') or 'website'
             inquiry.save()
             notify_staff_of_enquiry(request, inquiry)
-            messages.success(request, "Thank you. Your enquiry has been received and our team will be in touch.")
-            return redirect('contact')
+            return redirect('enquiry_thanks')
     else:
         initial = {}
         if related_property:
@@ -199,5 +210,10 @@ def contact(request):
                 'inquiry_type': 'listing',
                 'message': 'I would like to discuss listing a property with EmanHomes.',
             })
+        initial['form_started'] = form_started_token()
         form = ContactForm(initial=initial)
     return render(request, 'core/contact.html', {'form': form, 'related_property': related_property})
+
+
+def enquiry_thanks(request):
+    return render(request, 'core/enquiry_thanks.html')

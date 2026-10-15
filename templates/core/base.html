@@ -232,6 +232,7 @@
         .empty-state { padding: 4rem 1rem; text-align: center; color: #7b8591; background: #fff; border: 1px dashed #ccd3db; border-radius: 12px; }
         @media (max-width: 767px) { .edge-hero { min-height: 560px; } .min-vh-75 { min-height: 560px; } .edge-hero h1 { font-size: 2.8rem; } .edge-search-wrap { margin-top: -42px; } .edge-search-card { padding: 1.1rem; } .edge-trust-panel { padding: 1.5rem; } .utility-bar { display: none; } }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <div class="utility-bar py-2">

@@ -170,6 +170,11 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'emanpages@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 LEAD_NOTIFICATION_EMAIL = os.environ.get('LEAD_NOTIFICATION_EMAIL', EMAIL_HOST_USER)
 ANALYTICS_MEASUREMENT_ID = os.environ.get('ANALYTICS_MEASUREMENT_ID', '')
+# Enquiry submissions allowed per visitor IP: (count, window in seconds).
+ENQUIRY_RATE_LIMIT = (
+    int(os.environ.get('ENQUIRY_RATE_LIMIT_COUNT', '10')),
+    int(os.environ.get('ENQUIRY_RATE_LIMIT_WINDOW', '600')),
+)
 SECURE_HSTS_SECONDS = 0 if DEBUG else int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True

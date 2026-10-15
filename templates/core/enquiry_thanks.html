@@ -1,0 +1,32 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Thank you for your enquiry{% endblock %}
+{% block meta_description %}Your enquiry has been received by EmanHomes.{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<section class="container py-5 my-5 text-center">
+    <div class="mx-auto" style="max-width: 38rem;">
+        <p class="text-accent fw-bold text-uppercase mb-2">Enquiry received</p>
+        <h1 class="fw-bold text-primary-custom mb-3">Thank you for contacting EmanHomes</h1>
+        <p class="text-muted mb-4">
+            Our team will review your enquiry and get back to you using your preferred contact method.
+            If your enquiry is urgent, you can reach us directly.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+            <a href="https://wa.me/{{ site_config.whatsapp_number|default:'233205843775' }}" target="_blank" rel="noopener"
+               class="btn btn-success rounded-pill px-4" data-analytics-event="whatsapp_click">
+                <i class="fab fa-whatsapp me-2"></i>WhatsApp us
+            </a>
+            <a href="tel:{{ site_config.main_phone|default:'+233205843775'|cut:' ' }}"
+               class="btn btn-outline-dark rounded-pill px-4" data-analytics-event="phone_click">
+                <i class="fas fa-phone me-2"></i>{{ site_config.main_phone|default:"+233 20 584 3775" }}
+            </a>
+        </div>
+        <a href="{% url 'properties_list' %}" class="btn btn-accent rounded-pill px-4">Continue browsing properties</a>
+    </div>
+</section>
+{% if analytics_measurement_id %}
+<script>gtag('event', 'generate_lead');</script>
+{% endif %}
+{% endblock %}
