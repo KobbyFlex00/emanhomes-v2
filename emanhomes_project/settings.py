@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
     'core',
 ]
 
@@ -115,6 +116,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Not read by Django >= 5.1, but django-cloudinary-storage's collectstatic
+# command (used with --upload-unhashed-files in the build) still requires it.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- MEDIA (Cloudinary) ---
 # Render's disk is ephemeral, so hosted environments must store uploads in

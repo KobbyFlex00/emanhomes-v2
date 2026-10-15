@@ -188,3 +188,26 @@ class ErrorPageTests(TestCase):
         from django.template.loader import render_to_string
         html = render_to_string('500.html')
         self.assertIn('Something went wrong', html)
+
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SeoEndpointTests(TestCase):
+    def test_sitemap_lists_properties(self):
+        property_obj = Property.objects.create(
+            title='Sitemap test plot', category='land', location='Oyarifa',
+            description='Plot', price=1000,
+        )
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('property_detail', kwargs={'slug': property_obj.slug}))
+
+    def test_robots_points_to_sitemap(self):
+        response = self.client.get('/robots.txt')
+        self.assertContains(response, 'Sitemap: ')
+
+
+class BuildCommandTests(TestCase):
+    def test_render_collectstatic_command_runs(self):
+        from django.core.management import call_command
+        call_command('collectstatic', interactive=False, dry_run=True, upload_unhashed_files=True, verbosity=0)
