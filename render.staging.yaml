@@ -2,7 +2,7 @@ services:
   - type: web
     name: eman-homes-staging
     runtime: python
-    branch: main
+    branch: staging
     buildCommand: "./build.sh"
     startCommand: "gunicorn emanhomes_project.wsgi:application"
     envVars:

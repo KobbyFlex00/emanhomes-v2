@@ -80,8 +80,8 @@ Visit http://127.0.0.1:8000 in your browser.
 
 ## 🚀 Production release checklist
 
-The live Render service should continue tracking the production branch. Test changes from
-`feature/eman-homes-launch-integration` using the separate staging configuration in
+The live Render service should continue tracking the production branch. Test changes on the
+`staging` branch using the separate staging configuration in
 `render.staging.yaml` before merging to production. See
 `docs/staging-deployment.md` for the non-destructive promotion process.
 
