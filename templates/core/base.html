@@ -280,7 +280,7 @@
     </nav>
 
     <div class="fab-container">
-        <a href="https://wa.me/{{ site_config.whatsapp_phone|default:'233205843775'|cut:' '|cut:'+' }}?text=Hello%20EmanHomes%2C%20I%27d%20like%20help%20finding%20a%20property." target="_blank" rel="noopener" class="fab-btn fab-whatsapp" title="Chat on WhatsApp" aria-label="Chat with EmanHomes on WhatsApp" data-analytics-event="whatsapp_click">
+        <a href="https://wa.me/{{ site_config.whatsapp_number|default:'233205843775' }}?text=Hello%20EmanHomes%2C%20I%27d%20like%20help%20finding%20a%20property." target="_blank" rel="noopener" class="fab-btn fab-whatsapp" title="Chat on WhatsApp" aria-label="Chat with EmanHomes on WhatsApp" data-analytics-event="whatsapp_click">
             <i class="fab fa-whatsapp"></i>
         </a>
         <a href="tel:{{ site_config.main_phone|default:'+233205843775' }}" class="fab-btn fab-phone" title="Call Us" aria-label="Call EmanHomes" data-analytics-event="phone_click">
@@ -311,10 +311,13 @@
                     <h4 class="fw-bold mb-3"><i class="fas fa-home me-2 text-accent"></i> EmanHomes</h4>
                     <p class="text-white-50">Practical property guidance for homes, land and commercial opportunities in Greater Accra.</p>
                     <div class="d-flex mt-3">
-                        {% if site_config.facebook %}<a href="{{ site_config.facebook }}" class="social-link"><i class="fab fa-facebook-f"></i></a>{% endif %}
-                        {% if site_config.twitter %}<a href="{{ site_config.twitter }}" class="social-link"><i class="fab fa-twitter"></i></a>{% endif %}
-                        {% if site_config.instagram %}<a href="{{ site_config.instagram }}" class="social-link"><i class="fab fa-instagram"></i></a>{% endif %}
-                        {% if site_config.linkedin %}<a href="{{ site_config.linkedin }}" class="social-link"><i class="fab fa-linkedin-in"></i></a>{% endif %}
+                        {% if site_config.facebook %}<a href="{{ site_config.facebook }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on Facebook"><i class="fab fa-facebook-f"></i></a>{% endif %}
+                        {% if site_config.instagram %}<a href="{{ site_config.instagram }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on Instagram"><i class="fab fa-instagram"></i></a>{% endif %}
+                        {% if site_config.tiktok %}<a href="{{ site_config.tiktok }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on TikTok"><i class="fab fa-tiktok"></i></a>{% endif %}
+                        {% if site_config.twitter %}<a href="{{ site_config.twitter }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on X"><i class="fab fa-x-twitter"></i></a>{% endif %}
+                        {% if site_config.linkedin %}<a href="{{ site_config.linkedin }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on LinkedIn"><i class="fab fa-linkedin-in"></i></a>{% endif %}
+                        {% if site_config.youtube %}<a href="{{ site_config.youtube }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on YouTube"><i class="fab fa-youtube"></i></a>{% endif %}
+                        {% if site_config.linktree %}<a href="{{ site_config.linktree }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on Linktree"><i class="fas fa-link"></i></a>{% endif %}
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-6">
@@ -337,7 +340,7 @@
                 <div class="col-lg-3 col-md-6">
                     <h5 class="fw-bold mb-3 text-accent">Business Hours</h5>
                     <ul class="list-unstyled text-white-50">
-                        <li class="d-flex justify-content-between"><span>Monday - Sunday:</span> <span>Open 24 hours</span></li>
+                        <li>{{ site_config.business_hours|default:"Open 24 hours, 7 days a week" }}</li>
                     </ul>
                 </div>
             </div>

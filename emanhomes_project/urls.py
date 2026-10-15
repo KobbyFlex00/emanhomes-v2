@@ -29,10 +29,10 @@ class PropertySitemap(Sitemap):
     priority = 0.9
 
     def items(self):
-        return Property.objects.order_by('-created_at', 'pk')
+        return Property.objects.public().order_by('-created_at', 'pk')
 
     def lastmod(self, item):
-        return item.created_at
+        return item.updated_at
 
     def location(self, item):
         return reverse('property_detail', kwargs={'slug': item.slug})

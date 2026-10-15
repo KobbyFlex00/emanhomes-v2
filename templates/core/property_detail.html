@@ -1,8 +1,8 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
 
-{% block title %}{{ property.title }} in {{ property.location }}{% endblock %}
-{% block meta_description %}{{ property.title }} in {{ property.location }} — {{ property.get_status_display }} at {{ property.currency_symbol }}{{ property.price|intcomma }}. Contact EmanHomes to arrange a viewing.{% endblock %}
+{% block title %}{% if property.seo_title %}{{ property.seo_title }}{% else %}{{ property.title }} in {{ property.location }}{% endif %}{% endblock %}
+{% block meta_description %}{% if property.seo_description %}{{ property.seo_description }}{% else %}{{ property.title }} in {{ property.location }} — {{ property.get_status_display }}, {{ property.price_display }}. Contact EmanHomes to arrange a viewing.{% endif %}{% endblock %}
 
 {% block content %}
 <div class="bg-white border-bottom py-3">
@@ -44,22 +44,21 @@
                 </div>
 
                 <h2 class="fw-normal mb-0" style="font-size: 2rem;">
-                    {{ property.currency }} {{ property.currency_symbol }}{{ property.price|intcomma }} 
-                    <i class="fas fa-info-circle text-muted ms-2 fs-6" data-bs-toggle="tooltip" title="Price is negotiable"></i>
+                    {% if property.price is not None %}{{ property.currency }} {% endif %}{{ property.price_display }}
                 </h2>
             </div>
 
             <div class="position-relative mb-4 rounded overflow-hidden shadow-sm">
-                {% if property.video_url %}
+                {% if property.get_embed_url %}
                     <div class="ratio ratio-16x9">
-                        <iframe loading="lazy" src="{{ property.get_embed_url }}" title="Property Video" allowfullscreen style="border:0;"></iframe>
+                        <iframe loading="lazy" src="{{ property.get_embed_url }}" title="Video of {{ property.title }}" allowfullscreen style="border:0;"></iframe>
                     </div>
 
                     {% if property.gallery.all %}
                     <div class="row g-2 mb-4">
                         {% for gallery_image in property.gallery.all %}
                         <div class="col-4">
-                            <img src="{{ gallery_image.image.url }}" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{{ gallery_image.caption|default:property.title }}">
+                            <img src="{{ gallery_image.image.url }}" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{% firstof gallery_image.alt_text gallery_image.caption property.title %}" loading="lazy">
                         </div>
                         {% endfor %}
                     </div>
@@ -71,7 +70,7 @@
                 {% endif %}
                 
                 <span class="badge position-absolute top-0 start-0 m-4 py-2 px-3 fs-6 shadow
-                    {% if property.status == 'sold' %}bg-danger
+                    {% if property.is_closed %}bg-danger
                     {% elif property.status == 'for_rent' %}bg-info
                     {% else %}bg-success{% endif %}">
                     {{ property.get_status_display }}
@@ -89,6 +88,7 @@
                 {% endif %}
             </div>
 
+            {% if property.price is not None and not property.is_closed %}
             <div class="card bg-white border shadow-sm p-4 mt-5 reveal-on-scroll">
                 <h4 class="fw-bold mb-3"><i class="fas fa-calculator me-2 text-primary-custom"></i>Payment Calculator</h4>
                 <div class="row g-3">
@@ -113,9 +113,11 @@
                     <div class="col-12 mt-3 text-center">
                         <h5 class="fw-bold">Estimated Monthly Payment: <span class="text-accent" id="calc-result">{{ property.currency_symbol }}0.00</span></h5>
                         <button class="btn btn-outline-accent mt-2 px-4 rounded-pill" onclick="calculateMortgage()">Calculate</button>
+                        <p class="small text-muted mt-3 mb-0">Illustration only, not a loan offer. Confirm rates and terms with your lender.</p>
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <div class="col-lg-4">
@@ -130,34 +132,46 @@
                         {% csrf_token %}
                         <input type="hidden" name="subject" value="Inquiry about {{ property.title }}">
                         <div class="mb-3">
-                            <input type="text" name="name" class="form-control bg-light border-0" placeholder="Your Name" required>
+                            <label class="form-label small fw-bold text-muted" for="enquiry-name">Your name</label>
+                            <input type="text" id="enquiry-name" name="name" maxlength="100" autocomplete="name" class="form-control bg-light border-0" required>
                         </div>
                         <div class="mb-3">
-                            <input type="email" name="email" class="form-control bg-light border-0" placeholder="Your Email" required>
+                            <label class="form-label small fw-bold text-muted" for="enquiry-email">Email</label>
+                            <input type="email" id="enquiry-email" name="email" autocomplete="email" class="form-control bg-light border-0" required>
                         </div>
                         <div class="mb-3">
-                            <textarea name="message" class="form-control bg-light border-0" rows="3" placeholder="I am interested in..." required>I am interested in {{ property.title }} located at {{ property.location }}.</textarea>
+                            <label class="form-label small fw-bold text-muted" for="enquiry-phone">Phone / WhatsApp</label>
+                            <input type="tel" id="enquiry-phone" name="phone" maxlength="30" autocomplete="tel" class="form-control bg-light border-0" placeholder="+233 20 000 0000" required>
                         </div>
                         <div class="mb-3">
-                            <select name="preferred_contact" class="form-select bg-light border-0" aria-label="Preferred contact method">
-                                <option value="whatsapp">Preferred contact: WhatsApp</option>
-                                <option value="phone">Preferred contact: Phone</option>
-                                <option value="email">Preferred contact: Email</option>
+                            <label class="form-label small fw-bold text-muted" for="enquiry-message">Message</label>
+                            <textarea id="enquiry-message" name="message" maxlength="3000" class="form-control bg-light border-0" rows="3" required>I am interested in {{ property.title }} located at {{ property.location }}.</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted" for="enquiry-contact">Preferred contact</label>
+                            <select id="enquiry-contact" name="preferred_contact" class="form-select bg-light border-0">
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="phone">Phone</option>
+                                <option value="email">Email</option>
                             </select>
                         </div>
                         <input type="hidden" name="inquiry_type" value="property">
-                        <input type="hidden" name="consent_to_contact" value="on">
+                        <input type="hidden" name="source" value="property-detail">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="enquiry-consent" name="consent_to_contact" required>
+                            <label class="form-check-label small text-muted" for="enquiry-consent">I agree that EmanHomes may contact me about this enquiry.</label>
+                        </div>
                         <button type="submit" data-analytics-event="inquiry_submit" class="btn btn-accent w-100 fw-bold py-2">Send Message</button>
                     </form>
                     <a class="btn btn-success w-100 fw-bold mt-2" target="_blank" rel="noopener" data-analytics-event="whatsapp_click"
-                       href="https://wa.me/233205843775?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
+                       href="https://wa.me/{{ site_config.whatsapp_number|default:'233205843775' }}?text=Hello%20EmanHomes%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20in%20{{ property.location|urlencode }}.">
                         <i class="fab fa-whatsapp me-2"></i> Ask on WhatsApp
                     </a>
                     
                     <div class="text-center mt-4">
                         <p class="text-muted small mb-2">Or call us directly:</p>
-                        <a href="tel:{{ site_config.main_phone }}" class="fw-bold text-dark fs-5 text-decoration-none">
-                            <i class="fas fa-phone-alt me-2 text-accent"></i> {{ site_config.main_phone }}
+                        <a href="tel:{{ site_config.main_phone|default:'+233205843775'|cut:' ' }}" class="fw-bold text-dark fs-5 text-decoration-none" data-analytics-event="phone_click">
+                            <i class="fas fa-phone-alt me-2 text-accent"></i> {{ site_config.main_phone|default:"+233 20 584 3775" }}
                         </a>
                     </div>
                 </div>
@@ -170,7 +184,7 @@
                         <div class="col-md-4">
                             <a href="{% url 'property_detail' related.slug %}" class="card h-100 border-0 shadow-sm text-decoration-none property-card">
                                 {% if related.main_image %}<img src="{{ related.main_image.url }}" class="card-img-top" style="height:180px;object-fit:cover" alt="{{ related.title }}">{% endif %}
-                                <div class="card-body"><h3 class="h6 text-primary-custom">{{ related.title }}</h3><p class="small text-muted mb-0">{{ related.location }} · {{ related.currency_symbol }}{{ related.price|intcomma }}</p></div>
+                                <div class="card-body"><h3 class="h6 text-primary-custom">{{ related.title }}</h3><p class="small text-muted mb-0">{{ related.location }} · {{ related.price_display }}</p></div>
                             </a>
                         </div>
                         {% endfor %}
