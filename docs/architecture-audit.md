@@ -212,3 +212,9 @@ It is still in git history (I have not printed the value). The README already sa
 - Removed the unconfirmed "Price is negotiable" tooltip.
 - PR #4 review: new columns got database-level defaults (`0014`). Code from the previous release keeps inserting enquiries and listings while a deploy's migrations have run but old workers are still serving. Existing listings' `updated_at` is backfilled from `created_at`. Unicode-digit and out-of-range filter values are handled. Malformed stored video URLs no longer break a page. Content editors can create the Site Configuration record.
 - **Known limitation, not changed:** enquiries submitted through the old property-page form were recorded as consented, because of the hidden auto-tick. They can't be told apart from contact-page enquiries, which had a real checkbox, so the records were left as they are. Contacting people about their own enquiry is expected. Don't use pre-2026-10-15 property enquiries for marketing.
+
+**2026-10-15: Phase 4 (`feature/phase4-enquiry-protection`)**
+- R7 fixed: enquiry submissions are rate-limited per visitor IP (10 per 10 minutes, configurable through `ENQUIRY_RATE_LIMIT_COUNT` / `ENQUIRY_RATE_LIMIT_WINDOW`). The IP comes from Cloudflare's `CF-Connecting-IP`. Over the limit, visitors get a friendly 429 that points them to phone and WhatsApp.
+- The honeypot is now an off-screen text input; the old hidden input was skipped by most bots. A signed timestamp discards forms submitted within 3 seconds of loading. Caught submissions see the normal thank-you page, and nothing is saved or emailed.
+- New `/contact/thank-you/` page (noindex) with WhatsApp and call options, and a GA4 `generate_lead` event when analytics is configured.
+- Limitation: the rate-limit counter lives in each worker's memory (no shared cache), so with N gunicorn workers the effective limit is up to N × 10. That's acceptable for spam friction. Move to a shared cache if abuse appears.

@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.urls import path, reverse
 
 from core.models import Property
-from core.views import about, contact, health_check, home, properties_list, property_detail
+from core.views import about, contact, enquiry_thanks, health_check, home, properties_list, property_detail
 
 
 class StaticSitemap(Sitemap):
@@ -45,6 +45,7 @@ urlpatterns = [
     path('properties/', properties_list, name='properties_list'),
     path('property/<slug:slug>/', property_detail, name='property_detail'),
     path('contact/', contact, name='contact'),
+    path('contact/thank-you/', enquiry_thanks, name='enquiry_thanks'),
     path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap}}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', lambda request: HttpResponse(
         f"User-agent: *\nAllow: /\nSitemap: {request.build_absolute_uri(reverse('django.contrib.sitemaps.views.sitemap'))}\n",

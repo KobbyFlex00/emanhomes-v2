@@ -3,13 +3,19 @@ import re
 from django import forms
 
 from .models import ContactMessage
+from .spam import submitted_too_fast
 
 PHONE_ALLOWED = re.compile(r'^\+?[\d\s().-]+$')
 MESSAGE_MAX_LENGTH = 3000
 
 
 class ContactForm(forms.ModelForm):
-    website = forms.CharField(required=False, widget=forms.HiddenInput)
+    # Honeypot: a normal text input moved off-screen, so people never fill it but bots do.
+    website = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'autocomplete': 'off', 'tabindex': '-1'}),
+    )
+    form_started = forms.CharField(required=False, widget=forms.HiddenInput)
     source = forms.CharField(required=False, widget=forms.HiddenInput)
     phone = forms.CharField(
         max_length=30,
@@ -58,7 +64,7 @@ class ContactForm(forms.ModelForm):
         max_length = ContactMessage._meta.get_field('source').max_length
         return self.cleaned_data.get('source', '').strip()[:max_length]
 
-    def clean_website(self):
-        if self.cleaned_data.get('website'):
-            raise forms.ValidationError('Unable to submit this form.')
-        return ''
+    @property
+    def is_likely_spam(self):
+        """Honeypot filled or submitted faster than a person could. Call after is_valid()."""
+        return bool(self.cleaned_data.get('website')) or submitted_too_fast(self.cleaned_data.get('form_started'))

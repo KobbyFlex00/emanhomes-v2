@@ -1,11 +1,13 @@
 import importlib
 import smtplib
+import time
 from datetime import timedelta
 from decimal import Decimal
 
 from django.apps import apps as django_apps
 from django.contrib.auth.models import Group, User
 from django.core import mail
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.mail.backends.base import BaseEmailBackend
 from django.test import TestCase, override_settings
@@ -50,6 +52,7 @@ class PropertySearchTests(TestCase):
     EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
     SECURE_SSL_REDIRECT=False,
 )
+@override_settings(ENQUIRY_RATE_LIMIT=(1000, 600))
 class ContactWorkflowTests(TestCase):
     def test_contact_form_requires_consent(self):
         form = ContactForm(data={
@@ -71,7 +74,7 @@ class ContactWorkflowTests(TestCase):
             'phone': '+233 20 584 0000',
             'consent_to_contact': 'on',
         })
-        self.assertRedirects(response, reverse('contact'))
+        self.assertRedirects(response, reverse('enquiry_thanks'))
         self.assertEqual(ContactMessage.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('Ama', mail.outbox[0].body)
@@ -109,7 +112,7 @@ class ContactWorkflowTests(TestCase):
             'consent_to_contact': 'on',
             'source': 'x' * 500,
         })
-        self.assertRedirects(response, reverse('contact'))
+        self.assertRedirects(response, reverse('enquiry_thanks'))
         self.assertEqual(len(ContactMessage.objects.get().source), 100)
 
     def test_missing_source_defaults_to_website(self):
@@ -293,6 +296,7 @@ ENQUIRY = {
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(ENQUIRY_RATE_LIMIT=(1000, 600))
 class PublicationVisibilityTests(TestCase):
     def setUp(self):
         self.published = make_property(title='Published plot', category='land')
@@ -424,6 +428,7 @@ class VideoEmbedTests(TestCase):
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', SECURE_SSL_REDIRECT=False)
+@override_settings(ENQUIRY_RATE_LIMIT=(1000, 600))
 class EnquiryPhase2Tests(TestCase):
     def test_phone_is_required_and_validated(self):
         for phone in ('', 'call me', '12', '+233 ' + '9' * 20):
@@ -473,7 +478,7 @@ class EnquiryPhase2Tests(TestCase):
         enquiry = ContactMessage.objects.get()
         self.assertIn('SMTPException', enquiry.notification_error)
         self.assertIsNone(enquiry.notification_sent_at)
-        self.assertContains(response, 'Your enquiry has been received')
+        self.assertContains(response, 'Thank you for contacting EmanHomes')
         self.assertNotContains(response, 'delayed')
 
 
@@ -629,3 +634,93 @@ class AdminUploadFailureTests(TestCase):
         page = self.client.get('/admin/core/property/add/')
         self.assertContains(page, 'image storage service rejected the upload')
         self.assertFalse(Property.objects.exists())
+
+
+# --- Phase 4: enquiry protection ------------------------------------------------------
+
+def signed_form_token(seconds_ago):
+    from django.core import signing
+
+    from .spam import FORM_TOKEN_SALT
+    return signing.dumps(time.time() - seconds_ago, salt=FORM_TOKEN_SALT)
+
+
+@override_settings(
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    SECURE_SSL_REDIRECT=False,
+    ENQUIRY_RATE_LIMIT=(1000, 600),
+)
+class SpamProtectionTests(TestCase):
+    def test_filled_honeypot_looks_successful_but_saves_nothing(self):
+        with self.assertLogs('core.views', level='INFO'):
+            response = self.client.post(reverse('contact'), dict(ENQUIRY, website='https://spam.example'))
+        self.assertRedirects(response, reverse('enquiry_thanks'))
+        self.assertFalse(ContactMessage.objects.exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_instant_submission_is_discarded(self):
+        with self.assertLogs('core.views', level='INFO'):
+            response = self.client.post(reverse('contact'), dict(ENQUIRY, form_started=signed_form_token(0)))
+        self.assertRedirects(response, reverse('enquiry_thanks'))
+        self.assertFalse(ContactMessage.objects.exists())
+
+    def test_human_paced_submission_is_saved(self):
+        response = self.client.post(reverse('contact'), dict(ENQUIRY, form_started=signed_form_token(20)))
+        self.assertRedirects(response, reverse('enquiry_thanks'))
+        self.assertEqual(ContactMessage.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_missing_or_forged_token_is_not_treated_as_spam(self):
+        # Pages cached before this release have no token; forged tokens fail the signature.
+        self.client.post(reverse('contact'), ENQUIRY)
+        self.client.post(reverse('contact'), dict(ENQUIRY, form_started='forged-token'))
+        self.assertEqual(ContactMessage.objects.count(), 2)
+
+    def test_forms_render_honeypot_and_token(self):
+        contact_page = self.client.get(reverse('contact'))
+        self.assertContains(contact_page, 'class="hp-field" aria-hidden="true"')
+        self.assertContains(contact_page, 'name="form_started"')
+        listing = make_property()
+        detail = self.client.get(reverse('property_detail', args=[listing.slug]))
+        self.assertContains(detail, 'name="website" autocomplete="off" tabindex="-1"')
+        self.assertRegex(detail.content.decode(), r'name="form_started" value="[^"]+"')
+
+    def test_thank_you_page_is_not_indexed(self):
+        response = self.client.get(reverse('enquiry_thanks'))
+        self.assertContains(response, 'Thank you for contacting EmanHomes')
+        self.assertContains(response, '<meta name="robots" content="noindex">')
+
+
+@override_settings(
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    SECURE_SSL_REDIRECT=False,
+    ENQUIRY_RATE_LIMIT=(3, 600),
+)
+class EnquiryRateLimitTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_limit_blocks_excess_submissions_from_one_ip(self):
+        for _ in range(3):
+            self.assertEqual(self.client.post(reverse('contact'), ENQUIRY).status_code, 302)
+        with self.assertLogs('core.views', level='WARNING'):
+            response = self.client.post(reverse('contact'), ENQUIRY)
+        self.assertEqual(response.status_code, 429)
+        self.assertContains(response, 'Please wait a few minutes', status_code=429)
+        self.assertEqual(ContactMessage.objects.count(), 3)
+
+    def test_limit_is_per_visitor_ip(self):
+        for _ in range(3):
+            self.client.post(reverse('contact'), ENQUIRY, HTTP_CF_CONNECTING_IP='198.51.100.1')
+        response = self.client.post(reverse('contact'), ENQUIRY, HTTP_CF_CONNECTING_IP='198.51.100.2')
+        self.assertEqual(response.status_code, 302)
+
+    def test_client_ip_prefers_cloudflare_header(self):
+        from django.test import RequestFactory
+
+        from .spam import client_ip
+        factory = RequestFactory()
+        self.assertEqual(client_ip(factory.get('/', HTTP_CF_CONNECTING_IP='203.0.113.9',
+                                               HTTP_X_FORWARDED_FOR='10.0.0.1')), '203.0.113.9')
+        self.assertEqual(client_ip(factory.get('/', HTTP_X_FORWARDED_FOR='203.0.113.7, 10.0.0.1')), '203.0.113.7')
+        self.assertEqual(client_ip(factory.get('/')), '127.0.0.1')
