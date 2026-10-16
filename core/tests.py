@@ -965,3 +965,23 @@ class ContentAndAccessibilityTests(TestCase):
 
     def test_about_hides_team_section_without_members(self):
         self.assertNotContains(self.client.get(reverse('about')), 'The people you will work with')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class LinktreeBadgeTests(TestCase):
+    def test_badge_links_to_default_linktree(self):
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, '<a class="hero-orbit" href="https://linktr.ee/emanhomes" target="_blank" rel="noopener"')
+        self.assertContains(response, 'Visit our<br>Linktree')
+        self.assertContains(response, 'aria-label="Visit our Linktree (opens in a new tab)"')
+
+    def test_badge_uses_configured_linktree(self):
+        SiteConfiguration.objects.create(linktree='https://linktr.ee/emanhomes-new')
+        self.assertContains(self.client.get(reverse('home')), 'href="https://linktr.ee/emanhomes-new"')
+
+    def test_badge_spins_pauses_on_hover_and_respects_reduced_motion(self):
+        css = (Path(settings.BASE_DIR) / 'static/css/eman-interactions.css').read_text(encoding='utf-8')
+        self.assertIn('animation: orbit 18s linear infinite;', css)
+        self.assertIn('@keyframes orbit', css)
+        self.assertIn('.hero-orbit:hover::before, .hero-orbit:focus-visible::before { animation-play-state: paused; }', css)
+        self.assertIn('@media (prefers-reduced-motion: reduce)', css)

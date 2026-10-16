@@ -20,7 +20,7 @@
             </div>
         </div>
     </div>
-    <div class="hero-orbit" aria-hidden="true"><span>Call EmanHomes<br>today</span></div>
+    <a class="hero-orbit" href="{{ site_config.linktree|default:'https://linktr.ee/emanhomes' }}" target="_blank" rel="noopener" data-analytics-event="linktree_click" aria-label="Visit our Linktree (opens in a new tab)"><span aria-hidden="true">Visit our<br>Linktree</span></a>
     <div class="container"><div class="hero-progress" role="tablist" aria-label="Hero slides">{% for property in properties|slice:":3" %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-hero-slide="{{ forloop.counter0 }}" aria-label="Show slide {{ forloop.counter }}"></button>{% empty %}<button type="button" class="is-active" data-hero-slide="0" aria-label="Show first slide"></button>{% endfor %}</div></div>
 </section>
 
