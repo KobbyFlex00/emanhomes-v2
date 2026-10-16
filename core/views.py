@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import connection
-from django.db.models import Prefetch, Q
+from django.db.models import F, Prefetch, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -78,7 +78,29 @@ def filter_properties(params):
         properties = properties.filter(price__lte=max_price)
     if bedrooms is not None:
         properties = properties.filter(bedrooms__gte=bedrooms)
-    return properties
+    return sort_properties(properties, params.get('sort', ''))
+
+
+SORT_CHOICES = (
+    ('', 'Recommended'),
+    ('newest', 'Newest'),
+    ('price_asc', 'Price: low to high'),
+    ('price_desc', 'Price: high to low'),
+)
+
+
+def sort_properties(properties, sort):
+    """Available listings always come before sold/rented ones.
+
+    Prices are in GHS or USD, so price sorts group by currency and sort within each
+    group; "Contact for price" listings go last.
+    """
+    if sort == 'newest':
+        return properties.order_by('closed_rank', '-created_at', 'pk')
+    if sort in ('price_asc', 'price_desc'):
+        price = F('price').asc(nulls_last=True) if sort == 'price_asc' else F('price').desc(nulls_last=True)
+        return properties.order_by('closed_rank', 'currency', price, '-created_at', 'pk')
+    return properties  # recommended: featured first, then newest (available_first)
 
 def home(request):
     query = request.GET.get('q', '').strip()
@@ -195,6 +217,10 @@ def properties_list(request, collection=None):
         'search_min_price': params.get('min_price', ''),
         'search_max_price': params.get('max_price', ''),
         'search_bedrooms': params.get('bedrooms', ''),
+        'search_sort': params.get('sort', ''),
+        'sort_choices': SORT_CHOICES,
+        'filter_params': {key: request.GET.get(key) for key in ('q', 'category', 'status', 'min_price',
+                                                                 'max_price', 'bedrooms') if request.GET.get(key)},
         'query_string': urlencode({key: value for key, value in request.GET.items() if key != 'page' and value}),
     }
     return render(request, 'core/properties.html', context)

@@ -1129,3 +1129,94 @@ class ListingPhotoTests(TestCase):
         self.assertNotContains(detail, 'No Image Available')
         self.assertContains(detail, '/media/properties/gallery/b.jpg')
         self.assertContains(self.client.get(reverse('properties_list')), 'src="/media/properties/gallery/a.jpg"')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class ListingSortTests(TestCase):
+    def setUp(self):
+        self.cheap_ghs = make_property(title='Cheap GHS', currency='GHS', price=Decimal('50000'))
+        self.dear_ghs = make_property(title='Dear GHS', currency='GHS', price=Decimal('900000'))
+        self.cheap_usd = make_property(title='Cheap USD', currency='USD', price=Decimal('20000'))
+        self.dear_usd = make_property(title='Dear USD', currency='USD', price=Decimal('300000'), is_featured=True)
+        self.on_request = make_property(title='On request', currency='GHS', price=None)
+        self.sold = make_property(title='Sold cheap', currency='GHS', price=Decimal('1'), status='sold')
+
+    def titles(self, sort):
+        response = self.client.get(reverse('properties_list'), {'sort': sort})
+        return [p.title for p in response.context['properties']]
+
+    def test_price_low_to_high_groups_currencies_and_puts_unpriced_and_sold_last(self):
+        self.assertEqual(self.titles('price_asc'),
+                         ['Cheap GHS', 'Dear GHS', 'On request', 'Cheap USD', 'Dear USD', 'Sold cheap'])
+
+    def test_price_high_to_low(self):
+        self.assertEqual(self.titles('price_desc'),
+                         ['Dear GHS', 'Cheap GHS', 'On request', 'Dear USD', 'Cheap USD', 'Sold cheap'])
+
+    def test_newest_ignores_featured(self):
+        self.assertEqual(self.titles('newest')[0], 'On request')
+        self.assertEqual(self.titles('newest')[-1], 'Sold cheap')
+
+    def test_recommended_and_unknown_sort_keep_featured_first(self):
+        for sort in ('', 'bogus'):
+            self.assertEqual(self.titles(sort)[0], 'Dear USD', sort)
+
+    def test_sort_control_keeps_filters_and_explains_currencies(self):
+        response = self.client.get(reverse('properties_list'), {'category': 'residential', 'sort': 'price_asc'})
+        self.assertContains(response, '<input type="hidden" name="category" value="residential">')
+        self.assertContains(response, '<option value="price_asc" selected>')
+        self.assertContains(response, 'are sorted separately')
+        self.assertContains(response, 'role="status">6 listings</p>')
+
+    def test_sort_works_on_landing_pages(self):
+        response = self.client.get(reverse('properties_houses'), {'sort': 'price_desc'})
+        self.assertEqual([p.title for p in response.context['properties']][0], 'Dear GHS')
+
+
+class BrandColourTests(TestCase):
+    @staticmethod
+    def contrast(hex_a, hex_b):
+        def luminance(hex_colour):
+            channels = [int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+            linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+            return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+        lighter, darker = sorted((luminance(hex_a), luminance(hex_b)), reverse=True)
+        return (lighter + 0.05) / (darker + 0.05)
+
+    def read(self, relative):
+        return (Path(settings.BASE_DIR) / relative).read_text(encoding='utf-8')
+
+    def test_tokens_match_the_logo(self):
+        base = self.read('templates/core/base.html')
+        self.assertIn('--primary: #00183A;', base)
+        self.assertIn('--accent: #E40021;', base)
+
+    def test_old_palette_is_gone(self):
+        for relative in ('templates/core/base.html', 'templates/core/home.html', 'templates/500.html',
+                         'static/css/eman-interactions.css'):
+            text = self.read(relative).lower()
+            for old in ('#0d2e59', '#071d38', '#d72638', '#a51c30', 'rgba(13,46,89', 'rgba(7,29,56', 'rgba(215,38,56'):
+                self.assertNotIn(old, text, f'{old} in {relative}')
+
+    def test_text_on_brand_colours_meets_wcag_aa(self):
+        self.assertGreaterEqual(self.contrast('#FFFFFF', '#E40021'), 4.5)  # white on buttons
+        self.assertGreaterEqual(self.contrast('#FFFFFF', '#B5001A'), 4.5)  # white on hover
+        self.assertGreaterEqual(self.contrast('#FFFFFF', '#00183A'), 4.5)  # white on navy
+        self.assertGreaterEqual(self.contrast('#E40021', '#FFFFFF'), 4.5)  # red text on white
+
+    def test_no_navy_text_on_red(self):
+        css = self.read('templates/core/base.html') + self.read('static/css/eman-interactions.css')
+        for line in css.splitlines():
+            if 'background: var(--accent)' in line or 'background-color: var(--accent)' in line:
+                self.assertNotIn('color: var(--primary)', line, line)
+
+    def test_floating_buttons_clear_the_mobile_action_bar(self):
+        css = self.read('static/css/eman-interactions.css')
+        self.assertIn('body:has(.mobile-action-bar) .fab-container { bottom: 5.25rem;', css)
+        self.assertIn('body:has(.mobile-action-bar) .fab-phone { display: none; }', css)
+
+
+class BannerHeadingTests(TestCase):
+    def test_headings_inside_navy_banners_are_white(self):
+        base = (Path(settings.BASE_DIR) / 'templates/core/base.html').read_text(encoding='utf-8')
+        self.assertIn('.bg-primary-custom :is(h1, h2, h3, h4, h5, h6) { color: #fff; }', base)
