@@ -11,6 +11,7 @@
     <title>{{ page_title }} | EmanHomes</title>
     <meta name="description" content="{{ page_description }}">
     {% if site_noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
+    {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
     <link rel="canonical" href="{{ site_url }}{{ request.path }}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="EmanHomes">

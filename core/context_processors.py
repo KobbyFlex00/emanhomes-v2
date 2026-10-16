@@ -24,6 +24,7 @@ def site_configuration(request):
     return {
         'site_config': config,
         'site_url': settings.SITE_URL,
+        'google_site_verification': settings.GOOGLE_SITE_VERIFICATION,
         # Staging and the raw Render address must never be indexed.
         'site_noindex': settings.SITE_NOINDEX or host.endswith('.onrender.com'),
         'privacy_published': LegalPage.PRIVACY in published_legal,
