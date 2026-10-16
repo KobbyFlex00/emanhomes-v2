@@ -30,7 +30,12 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TeamMember)
-admin.site.register(Service)
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ('title', 'display_order', 'is_active')
+    list_editable = ('display_order', 'is_active')
 
 
 class PropertyImageInline(admin.TabularInline):

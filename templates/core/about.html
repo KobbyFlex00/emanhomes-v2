@@ -1,94 +1,104 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block title %}About EmanHomes{% endblock %}
-{% block meta_description %}Learn how EmanHomes supports property buyers, renters and owners across East Legon and Greater Accra.{% endblock %}
+{% block meta_description %}Learn how Eman Homes Limited GH supports people buying, renting, building and improving property in Ghana.{% endblock %}
 
 {% block content %}
 
-<div class="bg-primary-custom py-5 text-white reveal-on-scroll">
+<div class="bg-primary-custom py-5 text-white">
     <div class="container text-center">
         <h1 class="fw-bold">About EmanHomes</h1>
-        <p class="lead text-white-50">Building Trust, Delivering Excellence in Ghanaian Real Estate.</p>
+        <p class="lead text-white-50 mb-0">Property guidance for buyers, renters, owners and investors.</p>
     </div>
 </div>
 
-<div class="container my-5 reveal-on-scroll">
+<section class="container my-5 reveal-on-scroll">
     <div class="row g-5 align-items-center">
-        <div class="col-lg-6">
-            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded shadow" alt="About Building">
+        <div class="col-lg-5 text-center">
+            <img src="{% static 'img/logo.jpeg' %}" class="img-fluid rounded shadow-sm" style="max-width: 280px;" alt="Eman Homes Limited GH logo">
         </div>
-        <div class="col-lg-6">
-            <h6 class="text-accent fw-bold text-uppercase">Who We Are</h6>
+        <div class="col-lg-7">
+            <p class="text-accent fw-bold text-uppercase small mb-2">Who we are</p>
             <h2 class="fw-bold text-primary-custom mb-4">Property guidance built around clarity and communication.</h2>
             <p class="text-muted mb-4">
-                At EmanHomes, we understand that buying, renting or selling property is a major decision. We help clients explore opportunities in Greater Accra with clear information, responsive communication and a practical path to the next step.
+                Buying, renting or selling property is a major decision. Eman Homes Limited GH helps clients explore
+                land and property opportunities with clear information, responsive communication and a practical path
+                to the next step.
             </p>
             <div class="d-flex mb-3">
-                <i class="fas fa-check-circle text-accent mt-1 me-3"></i>
+                <i class="fas fa-check-circle text-accent mt-1 me-3" aria-hidden="true"></i>
                 <div>
-                    <h5 class="fw-bold">Start with the right questions</h5>
-                    <p class="text-muted small">We help you clarify location, budget, property type, timing and the information needed before you proceed.</p>
+                    <h3 class="h5 fw-bold">Start with the right questions</h3>
+                    <p class="text-muted small mb-0">We help you clarify location, budget, property type, timing and the information needed before you proceed.</p>
                 </div>
             </div>
-            <div class="d-flex mb-3">
-                <i class="fas fa-check-circle text-accent mt-1 me-3"></i>
+            <div class="d-flex">
+                <i class="fas fa-check-circle text-accent mt-1 me-3" aria-hidden="true"></i>
                 <div>
-                    <h5 class="fw-bold">A clear next step</h5>
-                    <p class="text-muted small">You can contact us by WhatsApp, phone or email and receive guidance matched to your enquiry.</p>
+                    <h3 class="h5 fw-bold">A clear next step</h3>
+                    <p class="text-muted small mb-0">Contact us by WhatsApp, phone or email and receive guidance matched to your enquiry.</p>
                 </div>
-
-                <section class="container py-5">
-                    <div class="text-center mb-5">
-                        <p class="text-accent fw-bold text-uppercase mb-2">Our process</p>
-                        <h2 class="fw-bold text-primary-custom">From first conversation to confident action</h2>
-                    </div>
-                    <div class="row g-4">
-                        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">1</div><h3 class="h5">Tell us what you need</h3><p class="text-muted small">Share your preferred areas, budget, timing and whether you are buying, renting or listing.</p></div></div>
-                        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">2</div><h3 class="h5">Review relevant options</h3><p class="text-muted small">We help you focus on suitable opportunities and identify the details that need follow-up.</p></div></div>
-                        <div class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">3</div><h3 class="h5">Plan your next step</h3><p class="text-muted small">Arrange a conversation or viewing and proceed with the information and professional advice you need.</p></div></div>
-                    </div>
-                </section>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="bg-light py-5">
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <p class="text-accent fw-bold text-uppercase small mb-2">Our process</p>
+        <h2 class="fw-bold text-primary-custom">From first conversation to confident action</h2>
+    </div>
+    <ol class="row g-4 list-unstyled">
+        <li class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;" aria-hidden="true">1</div><h3 class="h5">Tell us what you need</h3><p class="text-muted small">Share your preferred areas, budget, timing and whether you are buying, renting or listing.</p></div></li>
+        <li class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;" aria-hidden="true">2</div><h3 class="h5">Review relevant options</h3><p class="text-muted small">We help you focus on suitable opportunities and identify the details that need follow-up.</p></div></li>
+        <li class="col-md-4"><div class="text-center px-3"><div class="rounded-circle bg-light text-primary-custom fw-bold fs-4 d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;" aria-hidden="true">3</div><h3 class="h5">Plan your next step</h3><p class="text-muted small">Arrange a conversation or viewing and proceed with the information and professional advice you need.</p></div></li>
+    </ol>
+</section>
+
+{% if services %}
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="text-center mb-4">
+            <p class="text-accent fw-bold text-uppercase small mb-2">What we do</p>
+            <h2 class="fw-bold text-primary-custom">Our services</h2>
+        </div>
+        <ul class="list-unstyled d-flex flex-wrap justify-content-center gap-2 mb-4">
+            {% for service in services %}<li class="badge rounded-pill text-bg-light border text-primary-custom fs-6 fw-normal px-3 py-2">{{ service.title }}</li>{% endfor %}
+        </ul>
+        <div class="text-center"><a href="{% url 'services' %}" class="btn btn-accent rounded-pill px-4">View services</a></div>
+    </div>
+</section>
+{% endif %}
+
+{% if team_members %}
+<section class="py-5">
     <div class="container">
         <div class="text-center mb-5">
-            <h6 class="text-accent fw-bold text-uppercase">Our Team</h6>
-            <h2 class="fw-bold text-primary-custom">Meet the Experts</h2>
+            <p class="text-accent fw-bold text-uppercase small mb-2">Our team</p>
+            <h2 class="fw-bold text-primary-custom">The people you will work with</h2>
         </div>
-        
         <div class="row justify-content-center">
             {% for member in team_members %}
             <div class="col-md-4 text-center mb-5">
                 <div class="bg-white p-4 h-100 shadow-sm border-0 rounded">
-                    <div class="mx-auto mb-4 rounded-circle shadow-sm overflow-hidden position-relative" 
-                         style="width: 150px; height: 150px; border: 4px solid #fff;">
-                        
+                    <div class="mx-auto mb-4 rounded-circle shadow-sm overflow-hidden position-relative" style="width: 150px; height: 150px; border: 4px solid #fff;">
                         {% if member.image_url %}
-                            <img src="{{ member.image_url }}" 
-                                 alt="{{ member.name }}" 
-                                 style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="{{ member.image_url }}" alt="{{ member.name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
                         {% else %}
-                            <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
+                            <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white" aria-hidden="true">
                                 <i class="fas fa-user fa-3x"></i>
                             </div>
                         {% endif %}
-                        
                     </div>
-                    <h5 class="fw-bold text-primary-custom mb-1">{{ member.name }}</h5>
+                    <h3 class="h5 fw-bold text-primary-custom mb-1">{{ member.name }}</h3>
                     <p class="text-accent small fw-bold text-uppercase mb-3">{{ member.role }}</p>
                     <p class="text-muted small">{{ member.bio }}</p>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12 text-center">
-                <p class="text-muted">Team members will be added soon.</p>
-            </div>
             {% endfor %}
         </div>
     </div>
-</div>
+</section>
+{% endif %}
 {% endblock %}

@@ -1,10 +1,13 @@
 import importlib
+import re
 import smtplib
 import time
 from datetime import timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from django.apps import apps as django_apps
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core import mail
 from django.core.cache import cache
@@ -15,7 +18,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import ContactForm
-from .models import ContactMessage, LegalPage, Property, SiteConfiguration
+from .models import ContactMessage, LegalPage, Property, Service, SiteConfiguration
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -830,3 +833,135 @@ class OfficialFacebookTests(TestCase):
 
     def test_new_configuration_uses_official_page(self):
         self.assertEqual(SiteConfiguration().facebook, 'https://www.facebook.com/emanhomesofficial')
+
+
+# --- Phase 5: services, landing pages, content and accessibility ----------------------
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class ServicesPageTests(TestCase):
+    def test_spec_services_are_seeded_in_order(self):
+        titles = list(Service.objects.values_list('title', flat=True))
+        self.assertEqual(titles, ['Land sales', 'House sales', 'Property development',
+                                  'Rentals and leasing', 'Construction', 'Property refurbishment'])
+
+    def test_seed_does_not_touch_existing_services(self):
+        migration = importlib.import_module('core.migrations.0018_seed_services_if_empty')
+        before = Service.objects.count()
+        migration.seed_services(django_apps, None)
+        self.assertEqual(Service.objects.count(), before)
+
+    def test_page_lists_active_services_only(self):
+        Service.objects.filter(title='Construction').update(is_active=False)
+        response = self.client.get(reverse('services'))
+        self.assertContains(response, 'Land sales')
+        self.assertNotContains(response, 'Construction services for homes')
+
+    def test_enquire_button_prefills_contact_form(self):
+        service = Service.objects.get(title='Property refurbishment')
+        response = self.client.get(reverse('contact'), {'service': service.pk})
+        self.assertEqual(response.context['form'].initial['subject'], 'Enquiry about property refurbishment')
+
+    def test_unknown_or_inactive_service_is_ignored(self):
+        service = Service.objects.get(title='Construction')
+        service.is_active = False
+        service.save()
+        for value in (service.pk, 99999, 'abc'):
+            response = self.client.get(reverse('contact'), {'service': value})
+            self.assertEqual(response.status_code, 200)
+            self.assertNotIn('subject', response.context['form'].initial)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class LandingPageTests(TestCase):
+    def setUp(self):
+        make_property(title='Plot at Aburi', category='land')
+        make_property(title='Family house', category='residential')
+        make_property(title='Office space', category='commercial')
+        make_property(title='Apartment to rent', category='residential', status='for_rent')
+
+    def titles(self, response):
+        return {p.title for p in response.context['properties']}
+
+    def test_land_page(self):
+        response = self.client.get(reverse('properties_land'))
+        self.assertEqual(self.titles(response), {'Plot at Aburi'})
+        self.assertContains(response, '<title>Land and plots in Ghana | EmanHomes</title>', html=False)
+
+    def test_houses_page(self):
+        response = self.client.get(reverse('properties_houses'))
+        self.assertEqual(self.titles(response), {'Family house', 'Apartment to rent'})
+
+    def test_rentals_page(self):
+        response = self.client.get(reverse('properties_rentals'))
+        self.assertEqual(self.titles(response), {'Apartment to rent'})
+
+    def test_landing_filter_cannot_be_overridden_by_query(self):
+        response = self.client.get(reverse('properties_land'), {'category': 'commercial'})
+        self.assertEqual(self.titles(response), {'Plot at Aburi'})
+
+    def test_landing_page_keeps_other_filters(self):
+        response = self.client.get(reverse('properties_houses'), {'status': 'for_rent'})
+        self.assertEqual(self.titles(response), {'Apartment to rent'})
+
+    def test_rentals_link_and_sitemap_entry_only_when_rentals_exist(self):
+        home = self.client.get(reverse('home'))
+        self.assertContains(home, 'href="/properties/rentals/"')
+        self.assertContains(self.client.get('/sitemap.xml'), '/properties/rentals/')
+        Property.objects.filter(status='for_rent').update(status='rented')
+        home = self.client.get(reverse('home'))
+        self.assertNotContains(home, 'href="/properties/rentals/"')
+        self.assertNotContains(self.client.get('/sitemap.xml'), '/properties/rentals/')
+
+    def test_sitemap_lists_new_pages(self):
+        sitemap = self.client.get('/sitemap.xml')
+        for path in ('/services/', '/properties/land/', '/properties/houses/'):
+            self.assertContains(sitemap, path)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class ContentAndAccessibilityTests(TestCase):
+    PAGES = ('home', 'about', 'services', 'properties_list', 'contact')
+
+    def test_no_stock_photos_or_unconfirmed_claims(self):
+        for name in self.PAGES:
+            html = self.client.get(reverse(name)).content.decode()
+            for banned in ('unsplash.com', 'Premium', 'Meet the Experts', 'cleaning services',
+                           'Delivering Excellence'):
+                self.assertNotIn(banned, html, f'{banned!r} on {name}')
+
+    def test_pages_have_skip_link_and_main_landmark(self):
+        for name in self.PAGES:
+            response = self.client.get(reverse(name))
+            self.assertContains(response, 'href="#main">Skip to main content</a>')
+            self.assertContains(response, '<main id="main" tabindex="-1">')
+
+    def test_titles_are_unique(self):
+        titles = set()
+        for name in self.PAGES:
+            title = re.search(r'<title>(.*?)</title>', self.client.get(reverse(name)).content.decode(), re.S).group(1)
+            self.assertNotIn(title, titles)
+            titles.add(title)
+
+    def test_content_visible_without_javascript(self):
+        css = (Path(settings.BASE_DIR) / 'static/css/eman-interactions.css').read_text(encoding='utf-8')
+        self.assertIn('.js .reveal-on-scroll { opacity: 0;', css)
+        self.assertNotRegex(css, r'(?m)^\.reveal-on-scroll \{ opacity: 0')
+        self.assertContains(self.client.get(reverse('home')), "document.documentElement.classList.add('js')")
+
+    def test_listing_filters_have_labels(self):
+        response = self.client.get(reverse('properties_list'))
+        for field in ('filter-category', 'filter-q', 'filter-status', 'filter-bedrooms'):
+            self.assertContains(response, f'<label class="visually-hidden" for="{field}">')
+
+    def test_category_tile_uses_real_listing_photo_when_available(self):
+        make_property(title='Land with photo', category='land', main_image='properties/aburi.jpg')
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, "url('/media/properties/aburi.jpg')")
+
+    def test_property_page_enquiry_heading(self):
+        listing = make_property()
+        self.assertContains(self.client.get(reverse('property_detail', args=[listing.slug])),
+                            'Enquire about this property')
+
+    def test_about_hides_team_section_without_members(self):
+        self.assertNotContains(self.client.get(reverse('about')), 'The people you will work with')

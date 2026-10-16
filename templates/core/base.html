@@ -3,14 +3,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>document.documentElement.classList.add('js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}EmanHomes{% endblock %} | Premium Real Estate in Accra</title>
+    <title>{% block title %}Land, houses and property in Ghana{% endblock %} | EmanHomes</title>
     <meta name="description" content="{% block meta_description %}Discover trusted homes, land and commercial property opportunities in East Legon and Greater Accra with EmanHomes.{% endblock %}">
     <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="EmanHomes">
-    <meta property="og:title" content="{% block og_title %}EmanHomes | Premium Real Estate in Accra{% endblock %}">
-    <meta property="og:description" content="Trusted property guidance, homes and land opportunities in Greater Accra.">
+    <meta property="og:title" content="{% block og_title %}EmanHomes | Land, houses and property in Ghana{% endblock %}">
+    <meta property="og:description" content="Land, houses, rentals and property services from Eman Homes Limited GH.">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.jpeg' %}">
     {% if analytics_measurement_id %}
@@ -191,7 +192,7 @@
         .btn-primary-custom { background: var(--primary); color: #fff; border: 0; }
         .btn-primary-custom:hover { background: #071d38; color: #fff; }
         .eyebrow { letter-spacing: .16em; text-transform: uppercase; font-size: .72rem; font-weight: 700; }
-        .edge-hero { position: relative; min-height: 590px; display: flex; align-items: center; background: linear-gradient(110deg, rgba(7,29,56,.97), rgba(13,46,89,.42)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=85') center/cover; }
+        .edge-hero { position: relative; min-height: 590px; display: flex; align-items: center; background: linear-gradient(110deg, #071d38, #0d2e59); }
         .edge-hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,29,56,.8), transparent 75%); }
         .edge-hero h1 { max-width: 760px; line-height: 1.03; letter-spacing: -.03em; }
         .edge-hero h1 em { color: #fff; font-style: normal; }
@@ -204,9 +205,8 @@
         .edge-intents a.active, .edge-intents a:hover { background: var(--primary); color: #fff; }
         .edge-quick-links a { background: #fff; border: 1px solid #e4e8ed; border-radius: 50px; color: var(--primary); font-size: .82rem; padding: .6rem .9rem; text-decoration: none; }
         .edge-quick-links a:hover { border-color: var(--secondary); color: var(--secondary); }
-        .category-tile { min-height: 180px; padding: 1.5rem; border-radius: 12px; color: #fff; display: flex; align-items: end; justify-content: space-between; text-decoration: none; background: linear-gradient(135deg, rgba(13,46,89,.94), rgba(13,46,89,.55)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=75') center/cover; transition: transform .25s ease, box-shadow .25s ease; }
-        .category-tile.category-land { background-image: linear-gradient(135deg, rgba(13,46,89,.93), rgba(13,46,89,.5)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=75'); }
-        .category-tile.category-commercial { background-image: linear-gradient(135deg, rgba(13,46,89,.93), rgba(13,46,89,.5)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=75'); }
+        .category-tile { min-height: 180px; padding: 1.5rem; border-radius: 12px; color: #fff; display: flex; align-items: end; justify-content: space-between; text-decoration: none; background: linear-gradient(135deg, #0d2e59, #071d38); background-size: cover; background-position: center; transition: transform .25s ease, box-shadow .25s ease; }
+
         .category-tile:hover { color: #fff; transform: translateY(-4px); box-shadow: 0 12px 28px rgba(7,29,56,.18); }
         .category-tile h3 { color: #fff; margin: .9rem 0 .15rem; }
         .category-tile p { color: rgba(255,255,255,.75); margin: 0; }
@@ -235,6 +235,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <a class="visually-hidden-focusable skip-link" href="#main">Skip to main content</a>
     <div class="utility-bar py-2">
         <div class="container d-flex justify-content-between align-items-center">
             <span><i class="fas fa-location-dot me-2"></i>{{ site_config.address|default:"Dzen-Ayor, East Legon, Accra, Ghana" }}</span>
@@ -245,11 +246,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-                <img src="{% static 'img/logo.jpeg' %}" alt="Logo" style="height: 30px; margin-right: 10px; border-radius: 4px;">
+                <img src="{% static 'img/logo.jpeg' %}" alt="" style="height: 30px; margin-right: 10px; border-radius: 4px;">
                 EmanHomes
             </a>
             
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Open menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
@@ -258,11 +259,20 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">Home</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about' %}">About Us</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="{% url 'properties_list' %}" role="button" data-bs-toggle="dropdown" aria-expanded="false">Properties</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'properties_list' %}">All properties</a></li>
+                            <li><a class="dropdown-item" href="{% url 'properties_land' %}">Land</a></li>
+                            <li><a class="dropdown-item" href="{% url 'properties_houses' %}">Houses</a></li>
+                            {% if has_rentals %}<li><a class="dropdown-item" href="{% url 'properties_rentals' %}">Rentals</a></li>{% endif %}
+                        </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'properties_list' %}">Properties</a>
+                        <a class="nav-link" href="{% url 'services' %}">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">About Us</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'contact' %}?type=listing">Sell / List Property</a>
@@ -289,7 +299,7 @@
         </a>
     </div>
 
-    <main>
+    <main id="main" tabindex="-1">
         {% if messages %}
             <div class="container mt-3">
                 {% for message in messages %}
@@ -327,6 +337,10 @@
                         <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50 text-decoration-none hover-white">Home</a></li>
                         <li class="mb-2"><a href="{% url 'about' %}" class="text-white-50 text-decoration-none hover-white">About Us</a></li>
                         <li class="mb-2"><a href="{% url 'properties_list' %}" class="text-white-50 text-decoration-none hover-white">Properties</a></li>
+                        <li class="mb-2"><a href="{% url 'properties_land' %}" class="text-white-50 text-decoration-none hover-white">Land</a></li>
+                        <li class="mb-2"><a href="{% url 'properties_houses' %}" class="text-white-50 text-decoration-none hover-white">Houses</a></li>
+                        {% if has_rentals %}<li class="mb-2"><a href="{% url 'properties_rentals' %}" class="text-white-50 text-decoration-none hover-white">Rentals</a></li>{% endif %}
+                        <li class="mb-2"><a href="{% url 'services' %}" class="text-white-50 text-decoration-none hover-white">Services</a></li>
                         <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none hover-white">Contact</a></li>
                     </ul>
                 </div>

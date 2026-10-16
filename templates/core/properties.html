@@ -1,14 +1,14 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
 
-{% block title %}Properties for Sale and Rent in Accra{% endblock %}
-{% block meta_description %}Browse EmanHomes property listings across East Legon and Greater Accra. Filter homes, land and commercial opportunities by price, status and bedrooms.{% endblock %}
+{% block title %}{% if collection %}{{ collection.title }}{% else %}Property for sale and rent in Ghana{% endif %}{% endblock %}
+{% block meta_description %}{% if collection %}{{ collection.description }}{% else %}Browse EmanHomes property listings. Filter land, houses and commercial property by price, status and bedrooms.{% endif %}{% endblock %}
 
 {% block content %}
 <div class="bg-primary-custom py-5 text-white mb-5 reveal-on-scroll">
     <div class="container text-center">
-        <h1 class="fw-bold">Our Properties</h1>
-        <p class="lead text-white-50">Browse our latest listings in East Legon and Greater Accra.</p>
+        <h1 class="fw-bold">{% if collection %}{{ collection.heading }}{% else %}Our properties{% endif %}</h1>
+        <p class="lead text-white-50">{% if collection %}{{ collection.intro }}{% else %}Browse current listings from EmanHomes.{% endif %}</p>
     </div>
 </div>
 
@@ -16,25 +16,29 @@
     <div class="bg-white p-4 rounded shadow-sm border">
         <form action="{% url 'properties_list' %}" method="get" class="row g-3">
             <div class="col-md-2">
-                <select name="category" class="form-select bg-light border-0">
+                <label class="visually-hidden" for="filter-category">Property type</label>
+                <select id="filter-category" name="category" class="form-select bg-light border-0">
                     <option value="all">All Types</option>
-                    <option value="land" {% if request.GET.category == 'land' %}selected{% endif %}>Land</option>
-                    <option value="residential" {% if request.GET.category == 'residential' %}selected{% endif %}>House</option>
-                    <option value="commercial" {% if request.GET.category == 'commercial' %}selected{% endif %}>Commercial</option>
+                    <option value="land" {% if search_category == 'land' %}selected{% endif %}>Land</option>
+                    <option value="residential" {% if search_category == 'residential' %}selected{% endif %}>House</option>
+                    <option value="commercial" {% if search_category == 'commercial' %}selected{% endif %}>Commercial</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control bg-light border-0" placeholder="Location or keyword">
+                <label class="visually-hidden" for="filter-q">Location or keyword</label>
+                <input type="text" id="filter-q" name="q" value="{{ search_query|default:'' }}" class="form-control bg-light border-0" placeholder="Location or keyword">
             </div>
             <div class="col-md-2">
-                <select name="status" class="form-select bg-light border-0">
+                <label class="visually-hidden" for="filter-status">Status</label>
+                <select id="filter-status" name="status" class="form-select bg-light border-0">
                     <option value="all">Any status</option>
                     <option value="for_sale" {% if search_status == 'for_sale' %}selected{% endif %}>For sale</option>
                     <option value="for_rent" {% if search_status == 'for_rent' %}selected{% endif %}>For rent</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <select name="bedrooms" class="form-select bg-light border-0">
+                <label class="visually-hidden" for="filter-bedrooms">Minimum bedrooms</label>
+                <select id="filter-bedrooms" name="bedrooms" class="form-select bg-light border-0">
                     <option value="">Bedrooms</option>
                     <option value="1" {% if search_bedrooms == '1' %}selected{% endif %}>1+ bedroom</option>
                     <option value="3" {% if search_bedrooms == '3' %}selected{% endif %}>3+ bedrooms</option>
@@ -93,8 +97,10 @@
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
-            <h4 class="text-muted">No properties found.</h4>
-            <a href="{% url 'properties_list' %}" class="btn btn-outline-accent mt-2">Clear Filters</a>
+            <h2 class="h4 text-muted">No matching listings right now.</h2>
+            <p class="text-muted">Try different filters, or tell us what you are looking for and we will let you know about suitable properties.</p>
+            <a href="{% url 'properties_list' %}" class="btn btn-outline-accent mt-2 me-2">Clear filters</a>
+            <a href="{% url 'contact' %}" class="btn btn-accent mt-2">Contact us</a>
         </div>
         {% endfor %}
     </div>
