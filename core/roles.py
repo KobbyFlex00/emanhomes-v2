@@ -20,6 +20,7 @@ ROLE_PERMISSIONS = {
         'service': ('add', 'change', 'delete', 'view'),
         'teammember': ('add', 'change', 'delete', 'view'),
         'siteconfiguration': ('add', 'change', 'view'),
+        'article': ('add', 'change', 'delete', 'view'),
     },
 }
 

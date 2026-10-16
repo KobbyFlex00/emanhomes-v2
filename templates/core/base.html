@@ -178,6 +178,8 @@
             background-color: var(--primary);
             color: white;
         }
+        /* Dark red on navy is ~2.5:1 contrast (fails WCAG AA); footer titles are white instead. */
+        footer h5.text-accent { color: #fff !important; }
 
         .social-link {
             width: 35px;
@@ -286,6 +288,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'services' %}">Services</a>
                     </li>
+                    {% if has_articles %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'insights' %}">Insights</a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'about' %}">About Us</a>
                     </li>
@@ -334,7 +341,7 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
-                    <h4 class="fw-bold mb-3"><i class="fas fa-home me-2 text-accent"></i> EmanHomes</h4>
+                    <h2 class="h4 fw-bold mb-3 text-white"><i class="fas fa-home me-2 text-accent" aria-hidden="true"></i> EmanHomes</h2>
                     <p class="text-white-50">Practical property guidance for homes, land and commercial opportunities in Greater Accra.</p>
                     <div class="d-flex mt-3">
                         {% if site_config.facebook %}<a href="{{ site_config.facebook }}" class="social-link" target="_blank" rel="noopener" aria-label="EmanHomes on Facebook"><i class="fab fa-facebook-f"></i></a>{% endif %}
@@ -356,6 +363,7 @@
                         <li class="mb-2"><a href="{% url 'properties_houses' %}" class="text-white-50 text-decoration-none hover-white">Houses</a></li>
                         {% if has_rentals %}<li class="mb-2"><a href="{% url 'properties_rentals' %}" class="text-white-50 text-decoration-none hover-white">Rentals</a></li>{% endif %}
                         <li class="mb-2"><a href="{% url 'services' %}" class="text-white-50 text-decoration-none hover-white">Services</a></li>
+                        {% if has_articles %}<li class="mb-2"><a href="{% url 'insights' %}" class="text-white-50 text-decoration-none hover-white">Insights</a></li>{% endif %}
                         <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none hover-white">Contact</a></li>
                     </ul>
                 </div>

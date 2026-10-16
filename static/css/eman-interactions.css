@@ -119,3 +119,8 @@ main:focus { outline: none; }
 
 /* Sort control: applies on change when JavaScript runs. */
 .js .sort-apply { display: none; }
+
+/* Removable active-filter chips on listing pages. */
+.filter-chip { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .8rem; border-radius: 999px;
+    background: #fff; border: 1px solid #c9d1dc; color: #00183A; font-size: .85rem; text-decoration: none; }
+.filter-chip:hover { border-color: #E40021; color: #E40021; }

@@ -166,6 +166,10 @@ Health check: /healthz/
 * **Media:** paste a YouTube or Instagram link, upload a main image, or both. At least one is required.
 * Enter bedrooms and bathrooms, and add gallery images with a display order.
 
+**Writing an Insights article:** go to *Articles → Add article*. Write in plain text: start a line with `## ` for a heading, `- ` for a bullet, and leave a blank line between paragraphs. Save as **Draft** and use *View on site* to preview it (only signed-in staff can see drafts). Set **Published** when it's ready; a future *published at* date schedules it. The Insights menu link appears once the first article is live.
+
+**Listing photos:** add a *Main image* or gallery photos to a listing. Photos are resized automatically for phones, and listings with photos appear in the homepage carousel.
+
 **Adding a team member:** go to *Team members → Add*. Paste a direct image URL. Google Drive "view" links do not work.
 
 ---

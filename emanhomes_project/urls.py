@@ -9,13 +9,15 @@ from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
 from django.urls import path, reverse
 
-from core.models import LegalPage, Property
+from core.models import Article, LegalPage, Property
 from core.views import (
     about,
+    article_detail,
     contact,
     enquiry_thanks,
     health_check,
     home,
+    insights,
     legal_page,
     properties_list,
     property_detail,
@@ -38,6 +40,8 @@ class StaticSitemap(Sitemap):
         items = ['home', 'about', 'services', 'properties_list', 'properties_land', 'properties_houses', 'contact']
         if Property.objects.public().filter(status='for_rent').exists():
             items.append('properties_rentals')
+        if Article.objects.published().exists():
+            items.append('insights')
         return items
 
     def location(self, item):
@@ -56,6 +60,20 @@ class LegalSitemap(Sitemap):
 
     def location(self, item):
         return reverse(item.slug)  # URL names match the slugs: 'privacy', 'terms'
+
+
+class ArticleSitemap(Sitemap):
+    changefreq = 'monthly'
+    priority = 0.6
+
+    def items(self):
+        return Article.objects.published().order_by('-published_at', 'pk')
+
+    def lastmod(self, item):
+        return item.updated_at
+
+    def location(self, item):
+        return reverse('article_detail', kwargs={'slug': item.slug})
 
 
 class PropertySitemap(Sitemap):
@@ -81,12 +99,14 @@ urlpatterns = [
     path('properties/houses/', properties_list, {'collection': 'houses'}, name='properties_houses'),
     path('properties/rentals/', properties_list, {'collection': 'rentals'}, name='properties_rentals'),
     path('services/', services, name='services'),
+    path('insights/', insights, name='insights'),
+    path('insights/<slug:slug>/', article_detail, name='article_detail'),
     path('property/<slug:slug>/', property_detail, name='property_detail'),
     path('contact/', contact, name='contact'),
     path('contact/thank-you/', enquiry_thanks, name='enquiry_thanks'),
     path('privacy/', legal_page, {'slug': 'privacy'}, name='privacy'),
     path('terms/', legal_page, {'slug': 'terms'}, name='terms'),
-    path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap, 'legal': LegalSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
+    path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap, 'legal': LegalSitemap, 'insights': ArticleSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', robots_txt),
 ]
 

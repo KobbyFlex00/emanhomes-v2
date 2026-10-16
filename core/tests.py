@@ -950,8 +950,11 @@ class ContentAndAccessibilityTests(TestCase):
 
     def test_listing_filters_have_labels(self):
         response = self.client.get(reverse('properties_list'))
-        for field in ('filter-category', 'filter-q', 'filter-status', 'filter-bedrooms'):
-            self.assertContains(response, f'<label class="visually-hidden" for="{field}">')
+        html = response.content.decode()
+        for field in ('filter-category', 'filter-q', 'filter-location', 'filter-status', 'filter-bedrooms',
+                      'filter-currency', 'filter-min-price', 'filter-max-price'):
+            self.assertRegex(html, rf'<label[^>]* for="{field}">', field)
+            self.assertIn(f'id="{field}"', html)
 
     def test_category_tile_uses_real_listing_photo_when_available(self):
         make_property(title='Land with photo', category='land', main_image='properties/aburi.jpg')
@@ -1348,3 +1351,168 @@ class SearchConsoleVerificationTests(TestCase):
     def test_company_code_is_the_default(self):
         from django.conf import settings as live_settings
         self.assertEqual(live_settings.GOOGLE_SITE_VERIFICATION, 'x2CvoQFMjuVELAEGCsRY_89qm8Tx5F1CM_FlhX4e5A4')
+
+
+# --- Faster photos, richer filters, Insights -------------------------------------------
+
+CLOUD_URL = 'https://res.cloudinary.com/demo/image/upload/v1700000000/media/properties/villa.jpg'
+
+
+class ResponsivePhotoTests(TestCase):
+    def test_cloudinary_urls_get_resize_and_format_transformations(self):
+        from .templatetags.media import cloudinary_variant, responsive_srcset
+        self.assertEqual(
+            cloudinary_variant(CLOUD_URL, 800),
+            'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,c_limit,w_800/v1700000000/media/properties/villa.jpg',
+        )
+        srcset = str(responsive_srcset(CLOUD_URL))
+        for width in (400, 800, 1200):
+            self.assertIn(f'w_{width}/v1700000000/media/properties/villa.jpg {width}w', srcset)
+
+    def test_other_urls_are_untouched(self):
+        from .templatetags.media import cloudinary_variant, responsive_srcset
+        for url in ('/media/properties/villa.jpg', '/static/img/logo.jpeg', '', None,
+                    'https://res.cloudinary.com/demo/video/upload/v1/clip.mp4'):
+            self.assertEqual(cloudinary_variant(url, 800), str(url or ''))
+            self.assertEqual(responsive_srcset(url), '')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_pages_serve_resized_cloudinary_photos(self):
+        from unittest import mock
+        listing = make_property(title='Cloud villa', main_image='properties/villa.jpg')
+        with mock.patch('django.db.models.fields.files.FieldFile.url', new_callable=mock.PropertyMock,
+                        return_value=CLOUD_URL):
+            listing_page = self.client.get(reverse('properties_list')).content.decode()
+            home = self.client.get(reverse('home')).content.decode()
+            detail = self.client.get(reverse('property_detail', args=[listing.slug])).content.decode()
+        self.assertIn('upload/f_auto,q_auto,c_limit,w_800/', listing_page)
+        self.assertIn('srcset="', listing_page)
+        self.assertIn('upload/f_auto,q_auto,c_limit,w_1600/', home)  # hero carousel
+        self.assertIn('<meta property="og:image" content="https://res.cloudinary.com/demo/image/upload/'
+                      'f_auto,q_auto,c_limit,w_1200/', detail)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class RicherFilterTests(TestCase):
+    def setUp(self):
+        make_property(title='Legon house', location='East Legon, Accra', currency='USD', price=Decimal('250000'))
+        make_property(title='Aburi plot', category='land', location='Adonten, Aburi', currency='GHS', price=Decimal('85000'))
+        make_property(title='Aburi villa', location='Aburi', currency='GHS', price=Decimal('900000'))
+
+    def titles(self, url=None, **params):
+        response = self.client.get(url or reverse('properties_list'), params)
+        return {p.title for p in response.context['properties']}
+
+    def test_location_filter(self):
+        self.assertEqual(self.titles(location='aburi'), {'Aburi plot', 'Aburi villa'})
+
+    def test_currency_with_price_range(self):
+        self.assertEqual(self.titles(currency='GHS', min_price='100000'), {'Aburi villa'})
+        self.assertEqual(self.titles(currency='USD', max_price='300000'), {'Legon house'})
+        self.assertEqual(self.titles(currency='EUR'), {'Legon house', 'Aburi plot', 'Aburi villa'})
+
+    def test_location_suggestions_come_from_published_listings(self):
+        make_property(title='Hidden', location='Secret Hills', publication_status=Property.DRAFT)
+        response = self.client.get(reverse('properties_list'))
+        self.assertContains(response, '<option value="Adonten, Aburi">')
+        self.assertNotContains(response, 'Secret Hills')
+
+    def test_active_filters_become_removable_chips(self):
+        response = self.client.get(reverse('properties_list'), {
+            'location': 'Aburi', 'currency': 'GHS', 'min_price': '50000', 'sort': 'newest',
+        })
+        chips = {chip['label']: chip['url'] for chip in response.context['filter_chips']}
+        self.assertEqual(set(chips), {'Location: Aburi', 'Prices in GH₵', 'From GH₵50,000'})
+        self.assertEqual(chips['Location: Aburi'], '/properties/?currency=GHS&min_price=50000&sort=newest')
+        self.assertContains(response, 'class="filter-chip"')
+        self.assertEqual(response.context['clear_filters_url'], '/properties/?sort=newest')
+
+    def test_invalid_values_do_not_make_chips(self):
+        response = self.client.get(reverse('properties_list'), {'min_price': 'abc', 'bedrooms': 'x', 'category': 'all'})
+        self.assertEqual(response.context['filter_chips'], [])
+
+    def test_landing_page_keeps_its_own_filter_out_of_the_form_and_chips(self):
+        response = self.client.get(reverse('properties_land'), {'location': 'Aburi'})
+        self.assertNotContains(response, 'id="filter-category"')
+        self.assertEqual([c['label'] for c in response.context['filter_chips']], ['Location: Aburi'])
+        self.assertEqual({p.title for p in response.context['properties']}, {'Aburi plot'})
+        self.assertContains(response, '<form method="get" class="row g-3" aria-label="Filter listings">')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class InsightsTests(TestCase):
+    def make_article(self, **overrides):
+        from .models import Article
+        fields = {'title': 'How to verify land title in Ghana', 'excerpt': 'Steps before you buy.',
+                  'body': 'Intro\n\n## Check the Lands Commission\n- Search the register'}
+        fields.update(overrides)
+        return Article.objects.create(**fields)
+
+    def test_drafts_are_private_and_hidden_everywhere(self):
+        draft = self.make_article()
+        self.assertEqual(self.client.get(reverse('article_detail', args=[draft.slug])).status_code, 404)
+        self.assertNotContains(self.client.get(reverse('insights')), draft.title)
+        self.assertNotContains(self.client.get(reverse('home')), 'href="/insights/"')
+        self.assertNotContains(self.client.get('/sitemap.xml'), '/insights/')
+
+    def test_publishing_sets_date_and_shows_article_everywhere(self):
+        from .models import Article
+        article = self.make_article(status=Article.PUBLISHED)
+        self.assertIsNotNone(article.published_at)
+        page = self.client.get(reverse('article_detail', args=[article.slug]))
+        self.assertContains(page, '<h2>Check the Lands Commission</h2>')
+        self.assertContains(page, '<meta property="og:type" content="article">')
+        self.assertContains(self.client.get(reverse('insights')), article.title)
+        home = self.client.get(reverse('home'))
+        self.assertContains(home, 'Guides for buyers and renters')
+        self.assertContains(home, 'href="/insights/"')
+        sitemap = self.client.get('/sitemap.xml')
+        self.assertContains(sitemap, f'/insights/{article.slug}/')
+
+    def test_scheduled_articles_wait_for_their_date(self):
+        from .models import Article
+        article = self.make_article(status=Article.PUBLISHED, published_at=timezone.now() + timedelta(days=2))
+        self.assertEqual(self.client.get(reverse('article_detail', args=[article.slug])).status_code, 404)
+
+    def test_staff_can_preview_drafts_with_noindex(self):
+        draft = self.make_article()
+        self.client.force_login(User.objects.create_user('writer', password='pw-12345!x', is_staff=True))
+        page = self.client.get(reverse('article_detail', args=[draft.slug]))
+        self.assertContains(page, 'this article is not public yet')
+        self.assertContains(page, '<meta name="robots" content="noindex">')
+
+    def test_article_structured_data(self):
+        import json
+
+        from .models import Article
+        article = self.make_article(status=Article.PUBLISHED, author_display_name='Eman Homes team')
+        html = self.client.get(reverse('article_detail', args=[article.slug])).content.decode()
+        data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+        self.assertEqual(data['@type'], 'Article')
+        self.assertEqual(data['headline'], article.title)
+        self.assertEqual(data['author']['name'], 'Eman Homes team')
+        self.assertIn('datePublished', data)
+
+    def test_duplicate_titles_get_unique_slugs(self):
+        first, second = self.make_article(), self.make_article()
+        self.assertNotEqual(first.slug, second.slug)
+
+    def test_article_body_html_is_escaped(self):
+        from .models import Article
+        article = self.make_article(status=Article.PUBLISHED, body='<script>alert(1)</script>')
+        self.assertNotContains(self.client.get(reverse('article_detail', args=[article.slug])), '<script>alert(1)')
+
+    def test_content_editors_manage_articles(self):
+        perms = set(Group.objects.get(name='Content editors').permissions.values_list('codename', flat=True))
+        self.assertTrue({'add_article', 'change_article', 'view_article'} <= perms)
+
+    def test_empty_insights_page(self):
+        self.assertContains(self.client.get(reverse('insights')), 'No articles yet')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class FooterReadabilityTests(TestCase):
+    def test_footer_brand_and_titles_are_white(self):
+        html = self.client.get(reverse('home')).content.decode()
+        self.assertIn('<h2 class="h4 fw-bold mb-3 text-white">', html)
+        self.assertIn('footer h5.text-accent { color: #fff !important; }', html)
