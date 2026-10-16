@@ -126,7 +126,10 @@ CLOUDINARY_URL=<cloudinary-connection-url>
 EMAIL_HOST_PASSWORD=<gmail-app-password-or-smtp-secret>
 LEAD_NOTIFICATION_EMAIL=<inbox-for-new-leads>
 ANALYTICS_MEASUREMENT_ID=<optional-ga4-measurement-id>
+ADMIN_EMAILS=<optional: where server-error alerts go; defaults to LEAD_NOTIFICATION_EMAIL>
 ```
+
+See [`docs/operations.md`](docs/operations.md) for error alerts, uptime monitoring, backups and rollback.
 
 Safety rails:
 

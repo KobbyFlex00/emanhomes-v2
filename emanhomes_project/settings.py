@@ -169,6 +169,21 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'emanpages@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 LEAD_NOTIFICATION_EMAIL = os.environ.get('LEAD_NOTIFICATION_EMAIL', EMAIL_HOST_USER)
+
+# --- ERROR ALERTS ---
+# Unhandled server errors (HTTP 500) are emailed to ADMINS when DEBUG is off.
+ADMINS = [
+    ('EmanHomes admin', address.strip())
+    for address in os.environ.get('ADMIN_EMAILS', LEAD_NOTIFICATION_EMAIL).split(',') if address.strip()
+]
+SERVER_EMAIL = EMAIL_HOST_USER  # Gmail only sends as the signed-in account
+EMAIL_SUBJECT_PREFIX = os.environ.get('EMAIL_SUBJECT_PREFIX', '[EmanHomes] ')
+
+# --- SEO ---
+# Canonical address used for canonical links, share previews and structured data.
+SITE_URL = os.environ.get('SITE_URL', 'https://emanhomes.com').rstrip('/')
+# Ask search engines not to index this deployment (also automatic on *.onrender.com hosts).
+SITE_NOINDEX = env_bool('SITE_NOINDEX', False)
 ANALYTICS_MEASUREMENT_ID = os.environ.get('ANALYTICS_MEASUREMENT_ID', '')
 # Enquiry submissions allowed per visitor IP: (count, window in seconds).
 ENQUIRY_RATE_LIMIT = (
@@ -189,11 +204,20 @@ LOGGING = {
     'formatters': {
         'standard': {'format': '%(asctime)s %(levelname)s %(name)s: %(message)s'},
     },
+    'filters': {
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+    },
     'handlers': {
         'console': {'class': 'logging.StreamHandler', 'formatter': 'standard'},
+        'mail_admins': {
+            'class': 'django.utils.log.AdminEmailHandler',
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+        },
     },
     'root': {'handlers': ['console'], 'level': os.environ.get('LOG_LEVEL', 'INFO')},
     'loggers': {
-        'django.request': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        # 404s are WARNING (console only); 500s are ERROR and also emailed.
+        'django.request': {'handlers': ['console', 'mail_admins'], 'level': 'WARNING', 'propagate': False},
     },
 }

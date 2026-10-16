@@ -29,6 +29,10 @@ services:
         sync: false
       - key: ANALYTICS_MEASUREMENT_ID
         sync: false
+      - key: SITE_NOINDEX
+        value: "true"
+      - key: EMAIL_SUBJECT_PREFIX
+        value: "[EmanHomes staging] "
 
 databases:
   - name: eman-homes-staging-db

@@ -15,8 +15,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
 from .forms import ContactForm
-from .models import LegalPage, Property, PropertyImage, Service, TeamMember
+from .models import LegalPage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
 from .spam import client_ip, form_started_token, rate_limit_exceeded
+from .structured_data import organization, property_breadcrumbs
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,7 @@ def home(request):
         'search_category': category,
         'categories': categories,
         'hero_slides': hero_slides(),
+        'organization': organization(SiteConfiguration.objects.first()),
     }
     return render(request, 'core/home.html', context)
 
@@ -233,6 +235,7 @@ def property_detail(request, slug):
     return render(request, 'core/property_detail.html', {
         'property': property, 'related_properties': related_properties,
         'enquiry_token': form_started_token(),
+        'breadcrumbs': property_breadcrumbs(property),
     })
 
 

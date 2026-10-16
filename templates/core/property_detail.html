@@ -1,8 +1,13 @@
 {% extends 'core/base.html' %}
-{% load humanize %}
+{% load humanize seo %}
 
 {% block title %}{% if property.seo_title %}{{ property.seo_title }}{% else %}{{ property.title }} in {{ property.location }}{% endif %}{% endblock %}
 {% block meta_description %}{% if property.seo_description %}{{ property.seo_description }}{% else %}{{ property.title }} in {{ property.location }} — {{ property.get_status_display }}, {{ property.price_display }}. Contact EmanHomes to arrange a viewing.{% endif %}{% endblock %}
+
+{% block og_image %}{% if property.cover_image_url %}{{ property.cover_image_url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block extra_head %}
+<script type="application/ld+json">{{ breadcrumbs|jsonld }}</script>
+{% endblock %}
 
 {% block content %}
 <div class="bg-white border-bottom py-3">

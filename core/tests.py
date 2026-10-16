@@ -1220,3 +1220,111 @@ class BannerHeadingTests(TestCase):
     def test_headings_inside_navy_banners_are_white(self):
         base = (Path(settings.BASE_DIR) / 'templates/core/base.html').read_text(encoding='utf-8')
         self.assertIn('.bg-primary-custom :is(h1, h2, h3, h4, h5, h6) { color: #fff; }', base)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, SITE_URL='https://emanhomes.com', SITE_NOINDEX=False)
+class SeoAndSharingTests(TestCase):
+    def head(self, url, **extra):
+        html = self.client.get(url, **extra).content.decode()
+        return html.split('</head>')[0]
+
+    def jsonld(self, html):
+        import json
+        return [json.loads(block) for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)]
+
+    def test_share_tags_reuse_page_title_and_description(self):
+        head = self.head(reverse('services'))
+        self.assertIn('<title>Real estate services | EmanHomes</title>', head)
+        description = re.search(r'<meta name="description" content="([^"]+)"', head).group(1)
+        self.assertIn(f'<meta property="og:description" content="{description}">', head)
+        self.assertIn('<meta property="og:title" content="Real estate services">', head)
+        self.assertIn('<meta name="twitter:card" content="summary_large_image">', head)
+
+    def test_canonical_and_og_url_use_the_main_domain(self):
+        head = self.head(reverse('services'), HTTP_HOST='testserver')
+        self.assertIn('<link rel="canonical" href="https://emanhomes.com/services/">', head)
+        self.assertIn('<meta property="og:url" content="https://emanhomes.com/services/">', head)
+
+    def test_default_share_image_is_absolute_logo(self):
+        self.assertIn('<meta property="og:image" content="https://emanhomes.com/static/img/logo.jpeg">',
+                      self.head(reverse('home')))
+
+    def test_listing_shares_its_own_photo(self):
+        listing = make_property(title='Villa with photo', main_image='properties/villa.jpg')
+        head = self.head(reverse('property_detail', args=[listing.slug]))
+        self.assertIn('<meta property="og:image" content="https://emanhomes.com/media/properties/villa.jpg">', head)
+        self.assertIn('<meta property="og:title" content="Villa with photo in Oyarifa">', head)
+
+    def test_homepage_business_structured_data(self):
+        SiteConfiguration.objects.create(tiktok='https://www.tiktok.com/@emanhomesltd')
+        data = self.jsonld(self.client.get(reverse('home')).content.decode())[0]
+        self.assertEqual(data['@type'], 'RealEstateAgent')
+        self.assertEqual(data['name'], 'Eman Homes Limited GH')
+        self.assertEqual(data['telephone'], '+233 20 584 3775')
+        self.assertEqual(data['address']['streetAddress'], 'Dzen-Ayor, East Legon, Accra, Ghana')
+        self.assertEqual(data['openingHoursSpecification']['opens'], '00:00')
+        self.assertIn('https://www.facebook.com/emanhomesofficial', data['sameAs'])
+        self.assertIn('https://www.tiktok.com/@emanhomesltd', data['sameAs'])
+
+    def test_listing_breadcrumbs(self):
+        listing = make_property(title='Plot', category='land')
+        data = self.jsonld(self.client.get(reverse('property_detail', args=[listing.slug])).content.decode())[0]
+        self.assertEqual([item['name'] for item in data['itemListElement']], ['Home', 'Properties', 'Land', 'Plot'])
+        self.assertEqual(data['itemListElement'][-1]['item'], f'https://emanhomes.com/property/{listing.slug}/')
+
+    def test_structured_data_cannot_break_out_of_its_script_tag(self):
+        listing = make_property(title='</script><script>alert(1)</script>', category='land')
+        html = self.client.get(reverse('property_detail', args=[listing.slug])).content.decode()
+        self.assertNotIn('<script>alert(1)', html)
+        self.assertEqual(self.jsonld(html)[0]['itemListElement'][-1]['name'], listing.title)
+
+    def test_production_is_indexable(self):
+        self.assertNotIn('noindex', self.head(reverse('home')))
+        self.assertContains(self.client.get('/robots.txt'), 'Allow: /')
+
+    @override_settings(ALLOWED_HOSTS=['*'])
+    def test_render_addresses_are_not_indexed(self):
+        host = {'HTTP_HOST': 'eman-homes-staging.onrender.com'}
+        self.assertIn('<meta name="robots" content="noindex, nofollow">', self.head(reverse('home'), **host))
+        robots = self.client.get('/robots.txt', **host)
+        self.assertContains(robots, 'Disallow: /')
+        self.assertNotContains(robots, 'Sitemap:')
+
+    @override_settings(SITE_NOINDEX=True)
+    def test_noindex_setting(self):
+        self.assertIn('noindex, nofollow', self.head(reverse('home')))
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    ADMINS=[('EmanHomes admin', 'alerts@example.com')],
+    EMAIL_SUBJECT_PREFIX='[EmanHomes] ',
+)
+class ErrorAlertTests(TestCase):
+    def test_server_error_emails_admins(self):
+        from unittest import mock
+        self.client.raise_request_exception = False
+        # No assertLogs here: it swaps out the logger's handlers, including the email one under test.
+        with mock.patch('core.views.Service.objects.filter', side_effect=RuntimeError('database exploded')):
+            response = self.client.get(reverse('services'))
+        self.assertEqual(response.status_code, 500)
+        alerts = [m for m in mail.outbox if m.to == ['alerts@example.com']]
+        self.assertEqual(len(alerts), 1)
+        self.assertTrue(alerts[0].subject.startswith('[EmanHomes] ERROR'))
+        self.assertIn('database exploded', alerts[0].body)
+
+    def test_not_found_pages_do_not_send_alerts(self):
+        self.client.get('/definitely-not-here/')
+        self.assertEqual(mail.outbox, [])
+
+    def test_admins_default_to_lead_inbox(self):
+        import os
+        import subprocess
+        import sys
+        env = {k: v for k, v in os.environ.items() if k not in ('ADMIN_EMAILS', 'RENDER')}
+        env.update(SECRET_KEY='test', DJANGO_SETTINGS_MODULE='emanhomes_project.settings',
+                   LEAD_NOTIFICATION_EMAIL='leads@example.com')
+        result = subprocess.run([sys.executable, '-c', 'import django; django.setup(); from django.conf import '
+                                 'settings; print(settings.ADMINS)'], env=env, capture_output=True, text=True)
+        self.assertIn("('EmanHomes admin', 'leads@example.com')", result.stdout, result.stderr)
