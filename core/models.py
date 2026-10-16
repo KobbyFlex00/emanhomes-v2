@@ -62,6 +62,13 @@ class Service(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     icon_name = models.CharField(max_length=50, help_text="FontAwesome icon class (e.g., fas fa-home)")
+    display_order = models.PositiveIntegerField(default=0, db_default=0)
+    is_active = models.BooleanField(
+        default=True, db_default=True, help_text="Untick to hide this service from the website.",
+    )
+
+    class Meta:
+        ordering = ('display_order', 'id')
 
     def __str__(self):
         return self.title

@@ -19,6 +19,7 @@ from core.views import (
     legal_page,
     properties_list,
     property_detail,
+    services,
 )
 
 
@@ -27,7 +28,10 @@ class StaticSitemap(Sitemap):
     changefreq = 'weekly'
 
     def items(self):
-        return ['home', 'about', 'properties_list', 'contact']
+        items = ['home', 'about', 'services', 'properties_list', 'properties_land', 'properties_houses', 'contact']
+        if Property.objects.public().filter(status='for_rent').exists():
+            items.append('properties_rentals')
+        return items
 
     def location(self, item):
         return reverse(item)
@@ -66,6 +70,10 @@ urlpatterns = [
     path('', home, name='home'),
     path('about/', about, name='about'),
     path('properties/', properties_list, name='properties_list'),
+    path('properties/land/', properties_list, {'collection': 'land'}, name='properties_land'),
+    path('properties/houses/', properties_list, {'collection': 'houses'}, name='properties_houses'),
+    path('properties/rentals/', properties_list, {'collection': 'rentals'}, name='properties_rentals'),
+    path('services/', services, name='services'),
     path('property/<slug:slug>/', property_detail, name='property_detail'),
     path('contact/', contact, name='contact'),
     path('contact/thank-you/', enquiry_thanks, name='enquiry_thanks'),

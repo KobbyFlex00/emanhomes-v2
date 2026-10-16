@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Real estate services{% endblock %}
+{% block meta_description %}Land and house sales, rentals and leasing, property development, construction and refurbishment from Eman Homes Limited GH.{% endblock %}
+
+{% block content %}
+<div class="bg-primary-custom py-5 text-white mb-5">
+    <div class="container text-center">
+        <h1 class="fw-bold">Our services</h1>
+        <p class="lead text-white-50 mb-0">How Eman Homes can help with buying, renting, building or improving property.</p>
+    </div>
+</div>
+
+<section class="container mb-5" aria-label="Services">
+    {% if services %}
+    <div class="row g-4">
+        {% for service in services %}
+        <div class="col-md-6 col-lg-4">
+            <article class="card border-0 shadow-sm h-100 p-4">
+                <span class="text-accent fs-2 mb-3" aria-hidden="true"><i class="{{ service.icon_name }}"></i></span>
+                <h2 class="h5 fw-bold text-primary-custom">{{ service.title }}</h2>
+                <p class="text-muted flex-grow-1">{{ service.description }}</p>
+                <a href="{% url 'contact' %}?service={{ service.pk }}" class="btn btn-outline-accent rounded-pill align-self-start">
+                    Enquire<span class="visually-hidden"> about {{ service.title|lower }}</span>
+                </a>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <p class="text-muted">Our service details are being updated.</p>
+        <a href="{% url 'contact' %}" class="btn btn-accent rounded-pill px-4">Tell us what you need</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="bg-light py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold text-primary-custom">Looking for property?</h2>
+        <p class="text-muted mb-4">Browse current listings or tell us what you are looking for.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a href="{% url 'properties_land' %}" class="btn btn-outline-dark rounded-pill px-4">Land</a>
+            <a href="{% url 'properties_houses' %}" class="btn btn-outline-dark rounded-pill px-4">Houses</a>
+            {% if has_rentals %}<a href="{% url 'properties_rentals' %}" class="btn btn-outline-dark rounded-pill px-4">Rentals</a>{% endif %}
+            <a href="{% url 'contact' %}" class="btn btn-accent rounded-pill px-4">Contact us</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

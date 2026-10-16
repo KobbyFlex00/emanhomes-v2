@@ -20,7 +20,7 @@
             </div>
         </div>
     </div>
-    <div class="hero-orbit" aria-label="Call EmanHomes today"><span>Call EmanHomes<br>today</span></div>
+    <div class="hero-orbit" aria-hidden="true"><span>Call EmanHomes<br>today</span></div>
     <div class="container"><div class="hero-progress" role="tablist" aria-label="Hero slides">{% for property in properties|slice:":3" %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-hero-slide="{{ forloop.counter0 }}" aria-label="Show slide {{ forloop.counter }}"></button>{% empty %}<button type="button" class="is-active" data-hero-slide="0" aria-label="Show first slide"></button>{% endfor %}</div></div>
 </section>
 
@@ -38,7 +38,7 @@
                 <div class="col-lg-2"><button class="btn btn-primary-custom btn-lg w-100" type="submit"><i class="fas fa-search me-2"></i>Search</button></div>
             </form>
         </div>
-        <div class="edge-quick-links d-flex flex-wrap gap-2 mt-3"><a href="{% url 'properties_list' %}?category=land"><i class="fas fa-tree me-2"></i>Land opportunities</a><a href="{% url 'properties_list' %}?category=residential"><i class="fas fa-house me-2"></i>Homes</a><a href="{% url 'properties_list' %}?category=commercial"><i class="fas fa-building me-2"></i>Commercial property</a></div>
+        <div class="edge-quick-links d-flex flex-wrap gap-2 mt-3"><a href="{% url 'properties_land' %}"><i class="fas fa-tree me-2"></i>Land opportunities</a><a href="{% url 'properties_houses' %}"><i class="fas fa-house me-2"></i>Homes</a><a href="{% url 'properties_list' %}?category=commercial"><i class="fas fa-building me-2"></i>Commercial property</a></div>
     </div>
 </section>
 
@@ -46,7 +46,7 @@
     <div class="container">
         <div class="section-heading d-flex justify-content-between align-items-end mb-4 reveal-on-scroll"><div><p class="eyebrow text-accent mb-2">Explore your options</p><h2 class="display-6 fw-bold text-primary-custom mb-0">Spaces for living and growing</h2></div></div>
         <div class="carousel-shell category-carousel" data-carousel><div class="d-flex justify-content-end gap-2 mb-2"><button class="carousel-control" type="button" data-carousel-prev aria-label="Previous categories"><i class="fas fa-arrow-left"></i></button><button class="carousel-control" type="button" data-carousel-next aria-label="Next categories"><i class="fas fa-arrow-right"></i></button></div><div class="carousel-track">
-            {% for category in categories %}<a href="{% url 'properties_list' %}?category={{ category.key }}" class="category-tile category-{{ category.key }} reveal-on-scroll"><div><span class="category-tile__icon"><i class="{% if category.key == 'land' %}fas fa-tree{% elif category.key == 'commercial' %}fas fa-building{% else %}fas fa-house{% endif %}"></i></span><h3>{{ category.label }}</h3><p><span class="counter-value" data-counter="{{ category.count }}">0</span> listing{{ category.count|pluralize }}</p></div><i class="fas fa-arrow-right category-tile__arrow"></i></a>{% endfor %}
+            {% for category in categories %}<a href="{% if category.key == 'land' %}{% url 'properties_land' %}{% elif category.key == 'residential' %}{% url 'properties_houses' %}{% else %}{% url 'properties_list' %}?category={{ category.key }}{% endif %}" class="category-tile category-{{ category.key }} reveal-on-scroll"{% if category.image %} style="background-image: linear-gradient(135deg, rgba(13,46,89,.92), rgba(13,46,89,.5)), url('{{ category.image }}')"{% endif %}><div><span class="category-tile__icon"><i class="{% if category.key == 'land' %}fas fa-tree{% elif category.key == 'commercial' %}fas fa-building{% else %}fas fa-house{% endif %}"></i></span><h3>{{ category.label }}</h3><p><span class="counter-value" data-counter="{{ category.count }}">0</span> listing{{ category.count|pluralize }}</p></div><i class="fas fa-arrow-right category-tile__arrow"></i></a>{% endfor %}
         </div></div>
     </div>
 </section>
@@ -61,7 +61,7 @@
 </section>
 
 <section class="py-5">
-    <div class="container"><div class="edge-trust-panel reveal-on-scroll"><div class="row g-4 align-items-center"><div class="col-lg-7"><p class="eyebrow text-accent">Why EmanHomes</p><h2 class="display-6 fw-bold text-primary-custom">Clear information for important decisions.</h2><p class="text-muted mb-0">EmanHomes Limited supports sales, management, development, land, houses, cleaning services and construction across Greater Accra. Start with your priorities and let our team help you identify the next practical step.</p></div><div class="col-lg-5"><div class="row g-3"><div class="col-6"><div class="trust-stat"><strong>Buy</strong><span>Homes & land</span></div></div><div class="col-6"><div class="trust-stat"><strong>Rent</strong><span>Residential & commercial</span></div></div><div class="col-6"><div class="trust-stat"><strong>List</strong><span>Property consultation</span></div></div><div class="col-6"><div class="trust-stat"><strong>Talk</strong><span>WhatsApp or phone</span></div></div></div></div></div></div></div>
+    <div class="container"><div class="edge-trust-panel reveal-on-scroll"><div class="row g-4 align-items-center"><div class="col-lg-7"><p class="eyebrow text-accent">Why EmanHomes</p><h2 class="display-6 fw-bold text-primary-custom">Clear information for important decisions.</h2><p class="text-muted mb-0">Eman Homes Limited GH works across land and house sales, rentals and leasing, property development, construction and refurbishment. Start with your priorities and let our team help you identify the next practical step.</p></div><div class="col-lg-5"><div class="row g-3"><div class="col-6"><div class="trust-stat"><strong>Buy</strong><span>Homes & land</span></div></div><div class="col-6"><div class="trust-stat"><strong>Rent</strong><span>Residential & commercial</span></div></div><div class="col-6"><div class="trust-stat"><strong>List</strong><span>Property consultation</span></div></div><div class="col-6"><div class="trust-stat"><strong>Talk</strong><span>WhatsApp or phone</span></div></div></div></div></div></div></div>
 </section>
 
 <div class="mobile-action-bar"><a href="{% url 'properties_list' %}"><i class="fas fa-search me-1"></i>Find a home</a><a href="{% url 'contact' %}?type=listing"><i class="fas fa-plus me-1"></i>List property</a><a href="tel:{{ site_config.main_phone|default:'+233205843775' }}"><i class="fas fa-phone me-1"></i>Call us</a></div>

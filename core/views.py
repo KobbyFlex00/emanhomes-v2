@@ -51,14 +51,15 @@ def _int_param(value):
     return int(value) if value.isascii() and value.isdigit() and len(value) <= 3 else None
 
 
-def filter_properties(request):
+def filter_properties(params):
+    """Published listings matching the search parameters (a dict or QueryDict)."""
     properties = Property.objects.public().available_first()
-    query = request.GET.get('q', '').strip()
-    category = request.GET.get('category', '').strip()
-    status = request.GET.get('status', '').strip()
-    min_price = _decimal_param(request.GET.get('min_price', '').strip())
-    max_price = _decimal_param(request.GET.get('max_price', '').strip())
-    bedrooms = _int_param(request.GET.get('bedrooms', '').strip())
+    query = params.get('q', '').strip()
+    category = params.get('category', '').strip()
+    status = params.get('status', '').strip()
+    min_price = _decimal_param(params.get('min_price', '').strip())
+    max_price = _decimal_param(params.get('max_price', '').strip())
+    bedrooms = _int_param(params.get('bedrooms', '').strip())
 
     if query:
         properties = properties.filter(
@@ -82,14 +83,15 @@ def filter_properties(request):
 def home(request):
     query = request.GET.get('q', '').strip()
     category = request.GET.get('category', '').strip()
-    properties = filter_properties(request).prefetch_related('gallery')[:6]
-    services = Service.objects.all()
+    properties = filter_properties(request.GET).prefetch_related('gallery')[:6]
+    services = Service.objects.filter(is_active=True)
     public_properties = Property.objects.public()
     categories = [
         {
             'key': key,
             'label': label,
             'count': public_properties.filter(category=key).count(),
+            'image': _category_image(public_properties.filter(category=key)),
         }
         for key, label in Property.CATEGORY_CHOICES
     ]
@@ -103,21 +105,68 @@ def home(request):
     }
     return render(request, 'core/home.html', context)
 
+def _category_image(listings):
+    """A real listing photo for a category tile, or None to use the brand gradient."""
+    with_image = listings.exclude(main_image='').exclude(main_image__isnull=True).order_by('-is_featured', '-created_at')
+    listing = with_image.first()
+    return listing.main_image.url if listing else None
+
+
 def about(request):
     team_members = TeamMember.objects.all()
-    return render(request, 'core/about.html', {'team_members': team_members})
+    services = Service.objects.filter(is_active=True)
+    return render(request, 'core/about.html', {'team_members': team_members, 'services': services})
 
-def properties_list(request):
-    properties = Paginator(filter_properties(request), 9).get_page(request.GET.get('page'))
+
+def services(request):
+    return render(request, 'core/services.html', {'services': Service.objects.filter(is_active=True)})
+
+
+# Landing pages for each kind of listing: a fixed filter plus page copy.
+COLLECTIONS = {
+    'land': {
+        'filters': {'category': 'land'},
+        'title': 'Land and plots in Ghana',
+        'heading': 'Land',
+        'intro': 'Plots and land for homes, investment and commercial use.',
+        'description': 'Browse land and plots listed by EmanHomes. Filter by price and status, '
+                       'then contact us about documentation and viewings.',
+    },
+    'houses': {
+        'filters': {'category': 'residential'},
+        'title': 'Houses in Ghana',
+        'heading': 'Houses',
+        'intro': 'Houses and residential property listed by EmanHomes.',
+        'description': 'Browse houses listed by EmanHomes. Filter by bedrooms, price and status, '
+                       'then contact us to arrange a viewing.',
+    },
+    'rentals': {
+        'filters': {'status': 'for_rent'},
+        'title': 'Property for rent in Ghana',
+        'heading': 'Rentals',
+        'intro': 'Homes and commercial property available to rent.',
+        'description': 'Browse property for rent listed by EmanHomes and contact us to arrange a viewing.',
+    },
+}
+
+
+def properties_list(request, collection=None):
+    page = COLLECTIONS[collection] if collection else None
+    params = request.GET.copy()
+    if page:
+        for key, value in page['filters'].items():
+            params[key] = value  # the landing page's own filter always applies
+    properties = Paginator(filter_properties(params), 9).get_page(params.get('page'))
 
     context = {
         'properties': properties,
-        'search_query': request.GET.get('q', ''),
-        'search_category': request.GET.get('category', ''),
-        'search_status': request.GET.get('status', ''),
-        'search_min_price': request.GET.get('min_price', ''),
-        'search_max_price': request.GET.get('max_price', ''),
-        'search_bedrooms': request.GET.get('bedrooms', ''),
+        'collection': page,
+        'search_query': params.get('q', ''),
+        'search_category': params.get('category', ''),
+        'search_status': params.get('status', ''),
+        'search_min_price': params.get('min_price', ''),
+        'search_max_price': params.get('max_price', ''),
+        'search_bedrooms': params.get('bedrooms', ''),
         'query_string': urlencode({key: value for key, value in request.GET.items() if key != 'page' and value}),
     }
     return render(request, 'core/properties.html', context)
@@ -204,6 +253,12 @@ def contact(request):
                 'message': f'I am interested in {related_property.title} in {related_property.location}.',
                 'inquiry_type': 'property',
             }
+        service = Service.objects.filter(is_active=True, pk=_int_param(request.GET.get('service', ''))).first()
+        if service:
+            initial.update({
+                'subject': f'Enquiry about {service.title.lower()}',
+                'inquiry_type': 'general',
+            })
         if request.GET.get('type') == 'listing':
             initial.update({
                 'subject': 'Property listing consultation',
