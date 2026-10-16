@@ -53,6 +53,20 @@
 </div>
 
 <div class="container mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <p class="text-muted mb-0" role="status">{{ properties.paginator.count }} listing{{ properties.paginator.count|pluralize }}</p>
+        <form method="get" class="d-flex align-items-center gap-2" aria-label="Sort listings">
+            {% for key, value in filter_params.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+            <label class="small text-muted text-nowrap mb-0" for="sort-listings">Sort by</label>
+            <select id="sort-listings" name="sort" class="form-select form-select-sm" data-autosubmit>
+                {% for value, label in sort_choices %}<option value="{{ value }}"{% if value == search_sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-dark sort-apply">Apply</button>
+        </form>
+    </div>
+    {% if search_sort == 'price_asc' or search_sort == 'price_desc' %}
+    <p class="small text-muted">Listings priced in GH&#8373; and US$ are sorted separately. "Contact for price" listings are shown last.</p>
+    {% endif %}
     <div class="row g-4">
         {% for property in properties %}
         <div class="col-md-4 reveal-on-scroll">

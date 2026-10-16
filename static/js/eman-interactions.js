@@ -97,7 +97,15 @@
         });
     }
 
+    function setupAutoSubmit() {
+        // Selects marked data-autosubmit apply immediately; the Apply button remains for no-JS visitors.
+        document.querySelectorAll('select[data-autosubmit]').forEach(function (select) {
+            select.addEventListener('change', function () { select.form.submit(); });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        setupAutoSubmit();
         document.querySelectorAll('[data-hero-carousel]').forEach(setupHero);
         setupCarousels();
         setupReveals();
