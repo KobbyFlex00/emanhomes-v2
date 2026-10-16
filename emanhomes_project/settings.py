@@ -184,6 +184,11 @@ EMAIL_SUBJECT_PREFIX = os.environ.get('EMAIL_SUBJECT_PREFIX', '[EmanHomes] ')
 SITE_URL = os.environ.get('SITE_URL', 'https://emanhomes.com').rstrip('/')
 # Ask search engines not to index this deployment (also automatic on *.onrender.com hosts).
 SITE_NOINDEX = env_bool('SITE_NOINDEX', False)
+# Google Search Console 'HTML tag' verification: only the content="..." value.
+# Not a secret: Google reads it from the public page. Override with the env var if it changes.
+GOOGLE_SITE_VERIFICATION = os.environ.get(
+    'GOOGLE_SITE_VERIFICATION', 'x2CvoQFMjuVELAEGCsRY_89qm8Tx5F1CM_FlhX4e5A4'
+).strip()
 ANALYTICS_MEASUREMENT_ID = os.environ.get('ANALYTICS_MEASUREMENT_ID', '')
 # Enquiry submissions allowed per visitor IP: (count, window in seconds).
 ENQUIRY_RATE_LIMIT = (

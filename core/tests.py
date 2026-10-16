@@ -1328,3 +1328,23 @@ class ErrorAlertTests(TestCase):
         result = subprocess.run([sys.executable, '-c', 'import django; django.setup(); from django.conf import '
                                  'settings; print(settings.ADMINS)'], env=env, capture_output=True, text=True)
         self.assertIn("('EmanHomes admin', 'leads@example.com')", result.stdout, result.stderr)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SearchConsoleVerificationTests(TestCase):
+    @override_settings(GOOGLE_SITE_VERIFICATION='abc123-token')
+    def test_tag_rendered_when_configured(self):
+        self.assertContains(self.client.get(reverse('home')),
+                            '<meta name="google-site-verification" content="abc123-token">')
+
+    @override_settings(GOOGLE_SITE_VERIFICATION='')
+    def test_no_tag_by_default(self):
+        self.assertNotContains(self.client.get(reverse('home')), 'google-site-verification')
+
+    @override_settings(GOOGLE_SITE_VERIFICATION='"><script>alert(1)</script>')
+    def test_value_is_escaped(self):
+        self.assertNotContains(self.client.get(reverse('home')), '<script>alert(1)')
+
+    def test_company_code_is_the_default(self):
+        from django.conf import settings as live_settings
+        self.assertEqual(live_settings.GOOGLE_SITE_VERIFICATION, 'x2CvoQFMjuVELAEGCsRY_89qm8Tx5F1CM_FlhX4e5A4')

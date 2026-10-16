@@ -61,4 +61,5 @@ After changing `CLOUDINARY_URL`, run `python manage.py check_media_storage` in t
 
 - `SITE_URL` (default `https://emanhomes.com`) is used for canonical links, share previews and structured data.
 - Any `*.onrender.com` address, and any deployment with `SITE_NOINDEX=true`, is marked noindex and its `robots.txt` disallows crawling. Only the real domain appears in Google.
+- Google Search Console is verified with the HTML-tag method. The code is the default for `GOOGLE_SITE_VERIFICATION` in settings. If Google issues a new code, set that variable on the production service in Render. Do not remove the tag, because Google re-checks it.
 - Submit `https://emanhomes.com/sitemap.xml` in Google Search Console once, then check it there occasionally.
