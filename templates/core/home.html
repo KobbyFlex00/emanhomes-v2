@@ -1,8 +1,13 @@
 {% extends 'core/base.html' %}
+{% load seo %}
 {% load humanize %}
 
-{% block title %}Find Your Place in Ghana{% endblock %}
-{% block meta_description %}Explore homes, land and commercial property in Greater Accra with EmanHomes Limited. Find the right opportunity and speak directly with our team.{% endblock %}
+{% block title %}Your trusted partner for land and property in Ghana{% endblock %}
+{% block meta_description %}Land, houses, rentals and property services from Eman Homes Limited GH. Browse current listings and speak directly with our team.{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">{{ organization|jsonld }}</script>
+{% endblock %}
 
 {% block content %}
 <section class="edge-hero edge-hero--carousel{% if not hero_slides %} edge-hero--no-photos{% endif %}" data-hero-carousel data-interval="45000" tabindex="0" aria-roledescription="carousel" aria-label="Current EmanHomes listings">

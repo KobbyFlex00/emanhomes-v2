@@ -1,19 +1,29 @@
-{% load static %}
+{% load static seo %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <script>document.documentElement.classList.add('js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Land, houses and property in Ghana{% endblock %} | EmanHomes</title>
-    <meta name="description" content="{% block meta_description %}Discover trusted homes, land and commercial property opportunities in East Legon and Greater Accra with EmanHomes.{% endblock %}">
-    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
-    <meta property="og:type" content="website">
+    {% capture as page_title %}{% block title %}Land, houses and property in Ghana{% endblock %}{% endcapture %}
+    {% capture as page_description %}{% block meta_description %}Land, houses, rentals and property services from Eman Homes Limited GH.{% endblock %}{% endcapture %}
+    {% capture as page_image %}{% block og_image %}{% static 'img/logo.jpeg' %}{% endblock %}{% endcapture %}
+    <title>{{ page_title }} | EmanHomes</title>
+    <meta name="description" content="{{ page_description }}">
+    {% if site_noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
+    <link rel="canonical" href="{{ site_url }}{{ request.path }}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="EmanHomes">
-    <meta property="og:title" content="{% block og_title %}EmanHomes | Land, houses and property in Ghana{% endblock %}">
-    <meta property="og:description" content="Land, houses, rentals and property services from Eman Homes Limited GH.">
-    <meta property="og:url" content="{{ request.build_absolute_uri }}">
-    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.jpeg' %}">
+    <meta property="og:locale" content="en_GH">
+    <meta property="og:title" content="{{ page_title }}">
+    <meta property="og:description" content="{{ page_description }}">
+    <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+    <meta property="og:image" content="{{ page_image|absolute_url }}">
+    <meta property="og:image:alt" content="{{ page_title }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ page_title }}">
+    <meta name="twitter:description" content="{{ page_description }}">
+    <meta name="twitter:image" content="{{ page_image|absolute_url }}">
     {% if analytics_measurement_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_measurement_id }}"></script>
     <script>

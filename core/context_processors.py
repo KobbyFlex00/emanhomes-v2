@@ -20,8 +20,12 @@ def site_configuration(request):
         published_legal = set()
         has_rentals = False
 
+    host = request.get_host() if request is not None else ''
     return {
         'site_config': config,
+        'site_url': settings.SITE_URL,
+        # Staging and the raw Render address must never be indexed.
+        'site_noindex': settings.SITE_NOINDEX or host.endswith('.onrender.com'),
         'privacy_published': LegalPage.PRIVACY in published_legal,
         'terms_published': LegalPage.TERMS in published_legal,
         'has_rentals': has_rentals,

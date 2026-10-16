@@ -23,6 +23,13 @@ from core.views import (
 )
 
 
+def robots_txt(request):
+    if settings.SITE_NOINDEX or request.get_host().endswith('.onrender.com'):
+        return HttpResponse("User-agent: *\nDisallow: /\n", content_type='text/plain')
+    sitemap_url = request.build_absolute_uri(reverse('django.contrib.sitemaps.views.sitemap'))
+    return HttpResponse(f"User-agent: *\nAllow: /\nSitemap: {sitemap_url}\n", content_type='text/plain')
+
+
 class StaticSitemap(Sitemap):
     priority = 0.8
     changefreq = 'weekly'
@@ -80,10 +87,7 @@ urlpatterns = [
     path('privacy/', legal_page, {'slug': 'privacy'}, name='privacy'),
     path('terms/', legal_page, {'slug': 'terms'}, name='terms'),
     path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticSitemap, 'properties': PropertySitemap, 'legal': LegalSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
-    path('robots.txt', lambda request: HttpResponse(
-        f"User-agent: *\nAllow: /\nSitemap: {request.build_absolute_uri(reverse('django.contrib.sitemaps.views.sitemap'))}\n",
-        content_type='text/plain'
-    )),
+    path('robots.txt', robots_txt),
 ]
 
 # This ensures media files work correctly in debug mode
