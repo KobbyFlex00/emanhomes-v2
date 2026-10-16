@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class SiteConfigurationAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Company', {'fields': ('site_name', 'address', 'business_hours')}),
+        ('Homepage', {'fields': ('hero_headline', 'hero_subheadline')}),
         ('Contact', {'fields': ('main_phone', 'secondary_phone', 'whatsapp_phone', 'email')}),
         ('Social profiles', {'fields': ('facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube', 'linktree')}),
         ('History', {'fields': ('updated_at',)}),

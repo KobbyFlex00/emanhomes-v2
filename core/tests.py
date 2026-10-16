@@ -969,10 +969,11 @@ class ContentAndAccessibilityTests(TestCase):
 
 @override_settings(SECURE_SSL_REDIRECT=False)
 class LinktreeBadgeTests(TestCase):
-    def test_badge_links_to_default_linktree(self):
+    def test_badge_links_to_default_linktree_with_circular_text(self):
         response = self.client.get(reverse('home'))
         self.assertContains(response, '<a class="hero-orbit" href="https://linktr.ee/emanhomes" target="_blank" rel="noopener"')
-        self.assertContains(response, 'Visit our<br>Linktree')
+        self.assertContains(response, '<textPath href="#hero-orbit-path"')
+        self.assertContains(response, 'VISIT OUR LINKTREE')
         self.assertContains(response, 'aria-label="Visit our Linktree (opens in a new tab)"')
 
     def test_badge_uses_configured_linktree(self):
@@ -981,7 +982,48 @@ class LinktreeBadgeTests(TestCase):
 
     def test_badge_spins_pauses_on_hover_and_respects_reduced_motion(self):
         css = (Path(settings.BASE_DIR) / 'static/css/eman-interactions.css').read_text(encoding='utf-8')
-        self.assertIn('animation: orbit 18s linear infinite;', css)
-        self.assertIn('@keyframes orbit', css)
-        self.assertIn('.hero-orbit:hover::before, .hero-orbit:focus-visible::before { animation-play-state: paused; }', css)
+        self.assertIn('.hero-orbit__ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: orbit', css)
+        self.assertIn('font-weight: 900', css)
+        self.assertIn('.hero-orbit:hover .hero-orbit__ring, .hero-orbit:focus-visible .hero-orbit__ring '
+                      '{ animation-play-state: paused; }', css)
         self.assertIn('@media (prefers-reduced-motion: reduce)', css)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class HeroCarouselTests(TestCase):
+    def test_slides_are_current_listings_with_photos(self):
+        with_photo = make_property(title='House with photo', main_image='properties/house.jpg')
+        make_property(title='Video only')
+        make_property(title='Sold with photo', status='sold', main_image='properties/sold.jpg')
+        make_property(title='Draft with photo', publication_status=Property.DRAFT, main_image='properties/d.jpg')
+        response = self.client.get(reverse('home'))
+        slides = response.context['hero_slides']
+        self.assertEqual([slide['property'].pk for slide in slides], [with_photo.pk])
+        self.assertContains(response, "background-image:url('/media/properties/house.jpg')")
+        self.assertContains(response, f'href="/property/{with_photo.slug}/" data-hero-caption')
+
+    def test_gallery_photo_is_used_when_there_is_no_main_image(self):
+        from .models import PropertyImage
+        listing = make_property(title='Gallery only')
+        PropertyImage.objects.create(property=listing, image='properties/gallery/g1.jpg')
+        self.assertEqual(self.client.get(reverse('home')).context['hero_slides'][0]['image_url'],
+                         '/media/properties/gallery/g1.jpg')
+
+    def test_slides_change_every_45_seconds_without_navy_tint(self):
+        self.assertContains(self.client.get(reverse('home')), 'data-interval="45000"')
+        css = (Path(settings.BASE_DIR) / 'static/css/eman-interactions.css').read_text(encoding='utf-8')
+        overlay = next(line for line in css.splitlines() if line.startswith('.edge-hero__slide::after'))
+        self.assertNotIn('7,29,56', overlay)  # the navy tint
+
+    def test_no_photos_falls_back_to_brand_background(self):
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.context['hero_slides'], [])
+        self.assertContains(response, 'edge-hero--no-photos')
+        self.assertNotContains(response, 'data-hero-caption')
+
+    def test_headline_is_editable_and_has_no_unprovable_claim(self):
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Your trusted partner for land and property in Ghana')
+        self.assertNotContains(response, 'No.1')
+        SiteConfiguration.objects.create(hero_headline='Homes and land across Ghana')
+        self.assertContains(self.client.get(reverse('home')), 'Homes and land across Ghana')

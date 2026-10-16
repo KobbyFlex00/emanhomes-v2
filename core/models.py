@@ -25,6 +25,15 @@ class SiteConfiguration(models.Model):
         max_length=100, default="Open 24 hours, 7 days a week", db_default="Open 24 hours, 7 days a week"
     )
 
+    # Homepage hero text, editable without a code change.
+    hero_headline = models.CharField(
+        max_length=120, default="Your trusted partner for land and property in Ghana", db_default="Your trusted partner for land and property in Ghana",
+        help_text="Main homepage heading. Avoid claims you cannot prove, such as 'No.1' or 'best'.",
+    )
+    hero_subheadline = models.CharField(
+        max_length=200, default="Land, houses, rentals and property services, with clear information at every step.", db_default="Land, houses, rentals and property services, with clear information at every step.",
+    )
+
     # Social Media
     facebook = models.URLField(blank=True, null=True, default="https://www.facebook.com/emanhomesofficial")
     instagram = models.URLField(blank=True, null=True, default="https://www.instagram.com/emanhomes")

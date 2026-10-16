@@ -6,6 +6,8 @@
     function setupHero(hero) {
         var slides = Array.prototype.slice.call(hero.querySelectorAll('.edge-hero__slide'));
         var dots = Array.prototype.slice.call(hero.querySelectorAll('[data-hero-slide]'));
+        var captions = Array.prototype.slice.call(hero.querySelectorAll('[data-hero-caption]'));
+        var interval = Number(hero.dataset.interval) || 45000;
         if (slides.length < 2) return;
         var current = 0;
         var timer;
@@ -17,10 +19,17 @@
                 dot.classList.toggle('is-active', i === current);
                 dot.setAttribute('aria-current', i === current ? 'true' : 'false');
             });
+            captions.forEach(function (caption, i) {
+                var active = i === current;
+                caption.classList.toggle('is-active', active);
+                // Only the visible caption can be reached by keyboard or screen reader.
+                if (active) { caption.removeAttribute('tabindex'); caption.removeAttribute('aria-hidden'); }
+                else { caption.setAttribute('tabindex', '-1'); caption.setAttribute('aria-hidden', 'true'); }
+            });
         }
         function restart() {
             window.clearInterval(timer);
-            if (!reducedMotion) timer = window.setInterval(function () { show(current + 1); }, 6500);
+            if (!reducedMotion) timer = window.setInterval(function () { show(current + 1); }, interval);
         }
         dots.forEach(function (dot, i) { dot.addEventListener('click', function () { show(i); restart(); }); });
         hero.addEventListener('mouseenter', function () { window.clearInterval(timer); });

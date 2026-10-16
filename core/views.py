@@ -102,8 +102,31 @@ def home(request):
         'search_query': query,
         'search_category': category,
         'categories': categories,
+        'hero_slides': hero_slides(),
     }
     return render(request, 'core/home.html', context)
+
+HERO_SLIDE_LIMIT = 8
+
+
+def hero_slides():
+    """Photos of current listings for the homepage carousel (listings with no photo are skipped)."""
+    listings = (
+        Property.objects.public()
+        .exclude(status__in=Property.CLOSED_STATUSES)
+        .filter(Q(main_image__gt='') | Q(gallery__isnull=False))
+        .distinct()
+        .order_by('-is_featured', '-created_at')
+        .prefetch_related('gallery')[:HERO_SLIDE_LIMIT]
+    )
+    slides = []
+    for listing in listings:
+        image = listing.main_image if listing.main_image else next(
+            (photo.image for photo in listing.gallery.all() if photo.image), None)
+        if image:
+            slides.append({'property': listing, 'image_url': image.url})
+    return slides
+
 
 def _category_image(listings):
     """A real listing photo for a category tile, or None to use the brand gradient."""
