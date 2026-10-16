@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-{% load humanize %}
+{% load humanize media %}
 
 {% block title %}{% if collection %}{{ collection.title }}{% else %}Property for sale and rent in Ghana{% endif %}{% endblock %}
 {% block meta_description %}{% if collection %}{{ collection.description }}{% else %}Browse EmanHomes property listings. Filter land, houses and commercial property by price, status and bedrooms.{% endif %}{% endblock %}
@@ -14,40 +14,69 @@
 
 <div class="container mb-5 reveal-on-scroll">
     <div class="bg-white p-4 rounded shadow-sm border">
-        <form action="{% url 'properties_list' %}" method="get" class="row g-3">
-            <div class="col-md-2">
-                <label class="visually-hidden" for="filter-category">Property type</label>
+        <form method="get" class="row g-3" aria-label="Filter listings">
+            {% if search_sort %}<input type="hidden" name="sort" value="{{ search_sort }}">{% endif %}
+            <div class="col-md-6 col-lg-3">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-q">Keyword or reference</label>
+                <input type="text" id="filter-q" name="q" value="{{ search_query|default:'' }}" class="form-control bg-light border-0" placeholder="e.g. 4 bedroom, EH-…">
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-location">Location</label>
+                <input type="text" id="filter-location" name="location" value="{{ search_location }}" list="location-suggestions" autocomplete="off" class="form-control bg-light border-0" placeholder="e.g. East Legon">
+                <datalist id="location-suggestions">{% for place in location_suggestions %}<option value="{{ place }}">{% endfor %}</datalist>
+            </div>
+            {% if 'category' not in locked_filters %}
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-category">Property type</label>
                 <select id="filter-category" name="category" class="form-select bg-light border-0">
-                    <option value="all">All Types</option>
+                    <option value="all">All types</option>
                     <option value="land" {% if search_category == 'land' %}selected{% endif %}>Land</option>
                     <option value="residential" {% if search_category == 'residential' %}selected{% endif %}>House</option>
                     <option value="commercial" {% if search_category == 'commercial' %}selected{% endif %}>Commercial</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="visually-hidden" for="filter-q">Location or keyword</label>
-                <input type="text" id="filter-q" name="q" value="{{ search_query|default:'' }}" class="form-control bg-light border-0" placeholder="Location or keyword">
-            </div>
-            <div class="col-md-2">
-                <label class="visually-hidden" for="filter-status">Status</label>
+            {% endif %}
+            {% if 'status' not in locked_filters %}
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-status">Status</label>
                 <select id="filter-status" name="status" class="form-select bg-light border-0">
                     <option value="all">Any status</option>
                     <option value="for_sale" {% if search_status == 'for_sale' %}selected{% endif %}>For sale</option>
                     <option value="for_rent" {% if search_status == 'for_rent' %}selected{% endif %}>For rent</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="visually-hidden" for="filter-bedrooms">Minimum bedrooms</label>
+            {% endif %}
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-bedrooms">Bedrooms</label>
                 <select id="filter-bedrooms" name="bedrooms" class="form-select bg-light border-0">
-                    <option value="">Bedrooms</option>
-                    <option value="1" {% if search_bedrooms == '1' %}selected{% endif %}>1+ bedroom</option>
-                    <option value="3" {% if search_bedrooms == '3' %}selected{% endif %}>3+ bedrooms</option>
-                    <option value="4" {% if search_bedrooms == '4' %}selected{% endif %}>4+ bedrooms</option>
+                    <option value="">Any</option>
+                    <option value="1" {% if search_bedrooms == '1' %}selected{% endif %}>1+</option>
+                    <option value="2" {% if search_bedrooms == '2' %}selected{% endif %}>2+</option>
+                    <option value="3" {% if search_bedrooms == '3' %}selected{% endif %}>3+</option>
+                    <option value="4" {% if search_bedrooms == '4' %}selected{% endif %}>4+</option>
+                    <option value="5" {% if search_bedrooms == '5' %}selected{% endif %}>5+</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-accent w-100 fw-bold"><i class="fas fa-search me-2"></i> Filter</button>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-currency">Currency</label>
+                <select id="filter-currency" name="currency" class="form-select bg-light border-0">
+                    <option value="">Any</option>
+                    <option value="GHS" {% if search_currency == 'GHS' %}selected{% endif %}>GH&#8373;</option>
+                    <option value="USD" {% if search_currency == 'USD' %}selected{% endif %}>US$</option>
+                </select>
             </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-min-price">Min price</label>
+                <input type="number" id="filter-min-price" name="min_price" value="{{ search_min_price }}" min="0" step="any" inputmode="numeric" class="form-control bg-light border-0" placeholder="No min">
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1" for="filter-max-price">Max price</label>
+                <input type="number" id="filter-max-price" name="max_price" value="{{ search_max_price }}" min="0" step="any" inputmode="numeric" class="form-control bg-light border-0" placeholder="No max">
+            </div>
+            <div class="col-12 col-lg-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-accent w-100 fw-bold"><i class="fas fa-search me-2" aria-hidden="true"></i>Search</button>
+            </div>
+            <p class="col-12 small text-muted mb-0">Listings are priced in GH&#8373; or US$. Choose a currency to compare prices like for like.</p>
         </form>
     </div>
 </div>
@@ -64,6 +93,14 @@
             <button type="submit" class="btn btn-sm btn-outline-dark sort-apply">Apply</button>
         </form>
     </div>
+    {% if filter_chips %}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="Active filters">
+        {% for chip in filter_chips %}
+        <a href="{{ chip.url }}" class="filter-chip">{{ chip.label }} <span aria-hidden="true">&times;</span><span class="visually-hidden">(remove filter)</span></a>
+        {% endfor %}
+        <a href="{{ clear_filters_url }}" class="small fw-bold text-accent ms-1">Clear all</a>
+    </div>
+    {% endif %}
     {% if search_sort == 'price_asc' or search_sort == 'price_desc' %}
     <p class="small text-muted">Listings priced in GH&#8373; and US$ are sorted separately. "Contact for price" listings are shown last.</p>
     {% endif %}
@@ -73,7 +110,7 @@
             <div class="card border-0 shadow-sm h-100 overflow-hidden property-card">
                 <div class="position-relative">
                     {% if property.cover_image_url %}
-                        <img src="{{ property.cover_image_url }}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ property.title }}" loading="lazy">
+                        <img src="{{ property.cover_image_url|resized:800 }}"{% responsive_srcset property.cover_image_url as photo_srcset %}{% if photo_srcset %} srcset="{{ photo_srcset }}" sizes="(max-width: 575px) 88vw, (max-width: 991px) 45vw, 400px"{% endif %} decoding="async" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ property.title }}" loading="lazy">
                     {% elif property.get_embed_url %}
                         <div style="height: 250px; background: #000; overflow: hidden;">
                             <iframe loading="lazy" src="{{ property.get_embed_url }}" title="{{ property.title }}" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>

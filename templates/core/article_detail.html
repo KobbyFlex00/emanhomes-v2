@@ -1,0 +1,52 @@
+{% extends 'core/base.html' %}
+{% load content media seo %}
+
+{% block title %}{% if article.seo_title %}{{ article.seo_title }}{% else %}{{ article.title }}{% endif %}{% endblock %}
+{% block meta_description %}{% if article.seo_description %}{{ article.seo_description }}{% else %}{{ article.excerpt }}{% endif %}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{% if article.cover_image %}{{ article.cover_image.url|resized:1200 }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block extra_head %}
+{% if not article.is_live %}<meta name="robots" content="noindex">{% endif %}
+<script type="application/ld+json">{{ article_jsonld|jsonld }}</script>
+{% endblock %}
+
+{% block content %}
+<article class="container py-5" style="max-width: 50rem;">
+    {% if not article.is_live %}
+    <div class="alert alert-warning" role="alert">
+        <strong>Preview:</strong> this article is not public yet (status: {{ article.get_status_display }}{% if article.published_at %}, publish date {{ article.published_at|date:"j F Y H:i" }}{% endif %}). Only signed-in staff can see it.
+    </div>
+    {% endif %}
+    <p class="small mb-2"><a href="{% url 'insights' %}" class="text-accent fw-bold text-decoration-none"><i class="fas fa-chevron-left me-1" aria-hidden="true"></i>Insights</a></p>
+    <h1 class="fw-bold text-primary-custom mb-3">{{ article.title }}</h1>
+    <p class="text-muted small mb-4">
+        {% if article.published_at %}<time datetime="{{ article.published_at|date:'c' }}">{{ article.published_at|date:"j F Y" }}</time>{% endif %}
+        {% if article.author_display_name %} · {{ article.author_display_name }}{% endif %}
+    </p>
+    {% if article.cover_image %}
+    {% responsive_srcset article.cover_image.url as cover_srcset %}
+    <img src="{{ article.cover_image.url|resized:1200 }}"{% if cover_srcset %} srcset="{{ cover_srcset }}" sizes="(max-width: 860px) 100vw, 800px"{% endif %} class="img-fluid rounded mb-4 w-100" style="max-height: 420px; object-fit: cover;" alt="{{ article.cover_alt }}">
+    {% endif %}
+    <p class="lead">{{ article.excerpt }}</p>
+    <div class="article-body">
+        {{ article.body|simple_format }}
+    </div>
+    <div class="border-top mt-5 pt-4">
+        <p class="fw-bold mb-2">Have a question about this?</p>
+        <a href="{% url 'contact' %}" class="btn btn-accent rounded-pill px-4">Speak to Eman Homes</a>
+    </div>
+</article>
+
+{% if related_articles %}
+<section class="bg-light py-5">
+    <div class="container" style="max-width: 60rem;">
+        <h2 class="h4 fw-bold text-primary-custom mb-4">More insights</h2>
+        <ul class="list-unstyled mb-0">
+            {% for other in related_articles %}
+            <li class="mb-3"><a href="{% url 'article_detail' other.slug %}" class="fw-bold text-primary-custom">{{ other.title }}</a><br><span class="small text-muted">{{ other.excerpt }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -358,3 +358,67 @@ class LegalPage(models.Model):
     @property
     def is_published(self):
         return self.status == self.PUBLISHED
+
+
+class ArticleQuerySet(models.QuerySet):
+    def published(self):
+        """Live articles: published, with a publish date that has arrived (allows scheduling)."""
+        from django.utils import timezone
+        return self.filter(status=Article.PUBLISHED, published_at__lte=timezone.now())
+
+
+class Article(models.Model):
+    """An Insights article: buyer guides, documentation tips, company news."""
+    DRAFT, PUBLISHED, ARCHIVED = 'draft', 'published', 'archived'
+    STATUS_CHOICES = (
+        (DRAFT, 'Draft (hidden)'),
+        (PUBLISHED, 'Published'),
+        (ARCHIVED, 'Archived (hidden)'),
+    )
+
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True, max_length=220,
+                            help_text="Leave blank to create it from the title.")
+    excerpt = models.CharField(max_length=300, help_text="One or two sentences shown on article cards.")
+    body = models.TextField(
+        help_text="Plain text. Start a line with '## ' for a heading or '- ' for a bullet; "
+                  "leave a blank line between paragraphs.",
+    )
+    cover_image = models.ImageField(upload_to='articles/', blank=True, null=True)
+    cover_alt = models.CharField(max_length=200, blank=True, help_text="Describe the cover photo.")
+    author_display_name = models.CharField(max_length=100, blank=True, help_text="Optional, e.g. 'Eman Homes team'.")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT, db_index=True)
+    published_at = models.DateTimeField(
+        blank=True, null=True,
+        help_text="Set automatically when first published. A future date schedules the article.",
+    )
+    seo_title = models.CharField(max_length=70, blank=True, help_text="Optional. Defaults to the title.")
+    seo_description = models.CharField(max_length=160, blank=True, help_text="Optional. Defaults to the excerpt.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ArticleQuerySet.as_manager()
+
+    class Meta:
+        ordering = ('-published_at', '-created_at')
+        indexes = [models.Index(fields=['status', '-published_at'], name='article_live_idx')]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        if not self.slug:
+            base = slugify(self.title)[:200] or 'article'
+            slug, counter = base, 2
+            while Article.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug, counter = f"{base}-{counter}", counter + 1
+            self.slug = slug
+        if self.status == self.PUBLISHED and not self.published_at:
+            self.published_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    @property
+    def is_live(self):
+        from django.utils import timezone
+        return self.status == self.PUBLISHED and self.published_at is not None and self.published_at <= timezone.now()

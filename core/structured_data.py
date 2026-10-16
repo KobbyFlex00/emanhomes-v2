@@ -53,3 +53,24 @@ def property_breadcrumbs(listing):
             for position, (name, path) in enumerate(trail, start=1)
         ],
     }
+
+
+def article_data(article):
+    data = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        'headline': article.title[:110],
+        'description': article.excerpt,
+        'url': _absolute(reverse('article_detail', args=[article.slug])),
+        'dateModified': article.updated_at.isoformat(),
+        'author': {'@type': 'Organization', 'name': article.author_display_name or 'Eman Homes Limited GH'},
+        'publisher': {
+            '@type': 'Organization', 'name': 'Eman Homes Limited GH',
+            'logo': {'@type': 'ImageObject', 'url': _absolute(static('img/logo.jpeg'))},
+        },
+    }
+    if article.published_at:
+        data['datePublished'] = article.published_at.isoformat()
+    if article.cover_image:
+        data['image'] = _absolute(article.cover_image.url)
+    return data

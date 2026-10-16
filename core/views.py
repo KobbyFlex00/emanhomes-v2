@@ -15,9 +15,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
 from .forms import ContactForm
-from .models import LegalPage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
+from .models import Article, LegalPage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
 from .spam import client_ip, form_started_token, rate_limit_exceeded
-from .structured_data import organization, property_breadcrumbs
+from .structured_data import article_data, organization, property_breadcrumbs
+from .templatetags.media import cloudinary_variant
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,8 @@ def filter_properties(params):
     query = params.get('q', '').strip()
     category = params.get('category', '').strip()
     status = params.get('status', '').strip()
+    location = params.get('location', '').strip()
+    currency = params.get('currency', '').strip()
     min_price = _decimal_param(params.get('min_price', '').strip())
     max_price = _decimal_param(params.get('max_price', '').strip())
     bedrooms = _int_param(params.get('bedrooms', '').strip())
@@ -73,6 +76,10 @@ def filter_properties(params):
         properties = properties.filter(category=category)
     if status and status != 'all':
         properties = properties.filter(status=status)
+    if location:
+        properties = properties.filter(location__icontains=location)
+    if currency in dict(Property.CURRENCY_CHOICES):
+        properties = properties.filter(currency=currency)
     if min_price is not None:
         properties = properties.filter(price__gte=min_price)
     if max_price is not None:
@@ -127,6 +134,7 @@ def home(request):
         'categories': categories,
         'hero_slides': hero_slides(),
         'organization': organization(SiteConfiguration.objects.first()),
+        'recent_articles': Article.objects.published()[:3],
     }
     return render(request, 'core/home.html', context)
 
@@ -153,7 +161,8 @@ def hero_slides():
     for listing in listings:
         image = listing.main_image or (listing.hero_photos[0].image if listing.hero_photos else None)
         if image:
-            slides.append({'property': listing, 'image_url': image.url})
+            # Full-width background: 1600px is plenty even on large screens.
+            slides.append({'property': listing, 'image_url': cloudinary_variant(image.url, 1600)})
     return slides
 
 
@@ -161,7 +170,7 @@ def _category_image(listings):
     """A real listing photo for a category tile, or None to use the brand gradient."""
     with_image = listings.exclude(main_image='').exclude(main_image__isnull=True).order_by('-is_featured', '-created_at')
     listing = with_image.first()
-    return listing.main_image.url if listing else None
+    return cloudinary_variant(listing.main_image.url, 800) if listing else None
 
 
 def about(request):
@@ -202,6 +211,47 @@ COLLECTIONS = {
 }
 
 
+FILTER_KEYS = ('q', 'location', 'category', 'status', 'bedrooms', 'currency', 'min_price', 'max_price')
+CURRENCY_SYMBOLS = {'GHS': 'GH₵', 'USD': '$'}
+
+
+def _filter_chip_label(key, value, currency):
+    """Human label for an active filter, or None if the value is not a real filter."""
+    if value in ('', 'all'):
+        return None
+    if key == 'q':
+        return f'"{value}"'
+    if key == 'location':
+        return f'Location: {value}'
+    if key == 'category':
+        return dict(Property.CATEGORY_CHOICES).get(value)
+    if key == 'status':
+        return dict(Property.STATUS_CHOICES).get(value)
+    if key == 'bedrooms':
+        return f'{value}+ bedrooms' if _int_param(value) is not None else None
+    if key == 'currency':
+        return {'GHS': 'Prices in GH₵', 'USD': 'Prices in US$'}.get(value)
+    amount = _decimal_param(value)
+    if amount is None:
+        return None
+    price = f"{CURRENCY_SYMBOLS.get(currency, '')}{amount:,.0f}"
+    return f'From {price}' if key == 'min_price' else f'Up to {price}'
+
+
+def active_filter_chips(request, locked):
+    """Removable chips for the visitor's filters; the landing page's own filter is not a chip."""
+    current = {key: request.GET.get(key, '').strip() for key in (*FILTER_KEYS, 'sort')}
+    chips = []
+    for key in FILTER_KEYS:
+        if key in locked:
+            continue
+        label = _filter_chip_label(key, current[key], current['currency'])
+        if label:
+            remaining = {k: v for k, v in current.items() if v and k != key}
+            chips.append({'label': label, 'url': f'{request.path}?{urlencode(remaining)}'.rstrip('?')})
+    return chips
+
+
 def properties_list(request, collection=None):
     page = COLLECTIONS[collection] if collection else None
     params = request.GET.copy()
@@ -209,8 +259,19 @@ def properties_list(request, collection=None):
         for key, value in page['filters'].items():
             params[key] = value  # the landing page's own filter always applies
     properties = Paginator(filter_properties(params), 9).get_page(params.get('page'))
+    locked = set(page['filters']) if page else set()
+    sort = request.GET.get('sort', '')
 
     context = {
+        'locked_filters': locked,
+        'filter_chips': active_filter_chips(request, locked),
+        'clear_filters_url': f'{request.path}?{urlencode({"sort": sort})}' if sort else request.path,
+        'search_location': params.get('location', ''),
+        'search_currency': params.get('currency', ''),
+        'location_suggestions': list(
+            Property.objects.public().exclude(location='').order_by('location')
+            .values_list('location', flat=True).distinct()[:60]
+        ),
         'properties': properties,
         'collection': page,
         'search_query': params.get('q', ''),
@@ -221,8 +282,7 @@ def properties_list(request, collection=None):
         'search_bedrooms': params.get('bedrooms', ''),
         'search_sort': params.get('sort', ''),
         'sort_choices': SORT_CHOICES,
-        'filter_params': {key: request.GET.get(key) for key in ('q', 'category', 'status', 'min_price',
-                                                                 'max_price', 'bedrooms') if request.GET.get(key)},
+        'filter_params': {key: request.GET.get(key) for key in FILTER_KEYS if request.GET.get(key)},
         'query_string': urlencode({key: value for key, value in request.GET.items() if key != 'page' and value}),
     }
     return render(request, 'core/properties.html', context)
@@ -337,3 +397,18 @@ def legal_page(request, slug):
         # Drafts are not legally approved: the public must not see them.
         raise Http404
     return render(request, 'core/legal_page.html', {'page': page})
+
+
+def insights(request):
+    articles = Paginator(Article.objects.published(), 9).get_page(request.GET.get('page'))
+    return render(request, 'core/insights.html', {'articles': articles})
+
+
+def article_detail(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    if not article.is_live and not request.user.is_staff:
+        raise Http404  # drafts, archived and scheduled articles are private
+    related = Article.objects.published().exclude(pk=article.pk)[:3]
+    return render(request, 'core/article_detail.html', {
+        'article': article, 'related_articles': related, 'article_jsonld': article_data(article),
+    })

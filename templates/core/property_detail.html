@@ -1,10 +1,10 @@
 {% extends 'core/base.html' %}
-{% load humanize seo %}
+{% load humanize seo media %}
 
 {% block title %}{% if property.seo_title %}{{ property.seo_title }}{% else %}{{ property.title }} in {{ property.location }}{% endif %}{% endblock %}
 {% block meta_description %}{% if property.seo_description %}{{ property.seo_description }}{% else %}{{ property.title }} in {{ property.location }} — {{ property.get_status_display }}, {{ property.price_display }}. Contact EmanHomes to arrange a viewing.{% endif %}{% endblock %}
 
-{% block og_image %}{% if property.cover_image_url %}{{ property.cover_image_url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block og_image %}{% if property.cover_image_url %}{{ property.cover_image_url|resized:1200 }}{% else %}{{ block.super }}{% endif %}{% endblock %}
 {% block extra_head %}
 <script type="application/ld+json">{{ breadcrumbs|jsonld }}</script>
 {% endblock %}
@@ -60,7 +60,7 @@
                         <iframe loading="lazy" src="{{ property.get_embed_url }}" title="Video of {{ property.title }}" allowfullscreen style="border:0;"></iframe>
                     </div>
                 {% elif property.cover_image_url %}
-                    <img src="{{ property.cover_image_url }}" class="img-fluid w-100" style="max-height: 500px; object-fit: cover;" alt="{{ property.title }}">
+                    {% responsive_srcset property.cover_image_url as photo_srcset %}<img src="{{ property.cover_image_url|resized:1200 }}"{% if photo_srcset %} srcset="{{ photo_srcset }}" sizes="(max-width: 991px) 100vw, 860px"{% endif %} class="img-fluid w-100" style="max-height: 500px; object-fit: cover;" alt="{{ property.title }}">
                 {% else %}
                     <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 400px;">No Image Available</div>
                 {% endif %}
@@ -76,7 +76,7 @@
             <div class="row g-2 mb-4">
                 {% for gallery_image in photos %}
                 <div class="col-4">
-                    <img src="{{ gallery_image.image.url }}" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{% firstof gallery_image.alt_text gallery_image.caption property.title %}" loading="lazy">
+                    <img src="{{ gallery_image.image.url|resized:400 }}" decoding="async" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{% firstof gallery_image.alt_text gallery_image.caption property.title %}" loading="lazy">
                 </div>
                 {% endfor %}
             </div>
@@ -191,7 +191,7 @@
                         {% for related in related_properties %}
                         <div class="col-md-4">
                             <a href="{% url 'property_detail' related.slug %}" class="card h-100 border-0 shadow-sm text-decoration-none property-card">
-                                {% if related.main_image %}<img src="{{ related.main_image.url }}" class="card-img-top" style="height:180px;object-fit:cover" alt="{{ related.title }}">{% endif %}
+                                {% if related.main_image %}<img src="{{ related.main_image.url|resized:400 }}" loading="lazy" decoding="async" class="card-img-top" style="height:180px;object-fit:cover" alt="{{ related.title }}">{% endif %}
                                 <div class="card-body"><h3 class="h6 text-primary-custom">{{ related.title }}</h3><p class="small text-muted mb-0">{{ related.location }} · {{ related.price_display }}</p></div>
                             </a>
                         </div>

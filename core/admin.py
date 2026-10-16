@@ -7,7 +7,16 @@ from django.forms.models import BaseInlineFormSet
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 
-from .models import ContactMessage, LegalPage, Property, PropertyImage, Service, SiteConfiguration, TeamMember
+from .models import (
+    Article,
+    ContactMessage,
+    LegalPage,
+    Property,
+    PropertyImage,
+    Service,
+    SiteConfiguration,
+    TeamMember,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -198,3 +207,37 @@ class LegalPageAdmin(admin.ModelAdmin):
 
     def view_on_site(self, obj):
         return f'/{obj.slug}/'
+
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ('title', 'status', 'published_at', 'author_display_name', 'updated_at')
+    list_filter = ('status',)
+    search_fields = ('title', 'excerpt', 'body')
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ('publish', 'unpublish')
+    fieldsets = (
+        (None, {'fields': ('title', 'slug', 'excerpt', 'body')}),
+        ('Cover photo', {'fields': ('cover_image', 'cover_alt')}),
+        ('Publishing', {'fields': ('status', 'published_at', 'author_display_name')}),
+        ('Search engines', {'classes': ('collapse',), 'fields': ('seo_title', 'seo_description')}),
+        ('History', {'fields': ('created_at', 'updated_at')}),
+    )
+
+    def view_on_site(self, obj):
+        return f'/insights/{obj.slug}/'
+
+    @admin.action(description='Publish selected articles')
+    def publish(self, request, queryset):
+        for article in queryset:
+            article.status = Article.PUBLISHED
+            article.save()
+        self.message_user(request, f'{queryset.count()} article(s) published.', messages.SUCCESS)
+
+    @admin.action(description='Move selected articles to draft (hide)')
+    def unpublish(self, request, queryset):
+        for article in queryset:
+            article.status = Article.DRAFT
+            article.save()
+        self.message_user(request, f'{queryset.count()} article(s) moved to draft.', messages.SUCCESS)

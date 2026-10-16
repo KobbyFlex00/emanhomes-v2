@@ -228,3 +228,58 @@ It is still in git history (I have not printed the value). The README already sa
 - New pages: `/services/` (Service gains `display_order` and `is_active`; the six PRD services are seeded only if none exist) and the landing pages `/properties/land/`, `/properties/houses/` and `/properties/rentals/`. Each has its own title, description and fixed filter. Per the PRD, the Rentals link and sitemap entry appear only when a published listing is for rent. The Properties menu becomes a dropdown. Services cards link to `/contact/?service=<id>`, which pre-fills the subject.
 - R10 fixed: removed every Unsplash stock photo. Category tiles use a real listing photo from that category, or a brand gradient. Removed "Premium" from all titles, "Meet the Experts", "cleaning services" (replaced with the PRD service list) and the unconfirmed "Delivering Excellence" tagline. The About page layout bug (process section nested inside a bullet) is fixed, and the team section is hidden when there are no team members.
 - Accessibility: skip link and focusable `<main>`, a visible focus ring on navy and white backgrounds, labelled listing filters, a menu button label, and the decorative hero badge hidden from screen readers and no longer spinning. Reveal-on-scroll content is hidden only when JavaScript runs, so it stays visible if scripts fail.
+
+**2026-10-16: Hero, brand and discovery (PRs #8 to #13, all in production)**
+- #8 and #9: the homepage hero rotates photos of current listings every 45 seconds, with an "Available now" caption. Photos have no navy tint. Without photos it falls back to the brand background. The spinning circular "VISIT OUR LINKTREE" badge links to the Linktree from Site Configuration. The headline is editable in Admin; the default is "Your trusted partner for land and property in Ghana", and the requested "Ghana's No.1…" was declined as an unprovable claim. Fixed a hero layout bug: the text was squeezed against the left edge and the search card covered a button.
+- #10: listings can be saved with only gallery photos. A gallery row with no file no longer crashes the homepage or listing page. Gallery-only listings show their photos. The carousel prefetches one photo per listing and orders ties by id.
+- #11: colours sampled from the logo (navy `#00183A`, red `#E40021`), with no navy-on-red text. Listing sorting (recommended, newest, price ascending and descending), with currencies grouped. Phone floating buttons sit clear of the action bar. Fixed invisible navy-on-navy banner titles.
+- #12: per-page Open Graph and Twitter tags (listing photo or logo); canonical URLs from `SITE_URL`; RealEstateAgent and BreadcrumbList JSON-LD; `*.onrender.com` hosts and staging are noindex. Server errors are emailed to `ADMIN_EMAILS`. Added `docs/operations.md`.
+- #13: Google Search Console verification tag. Eman Homes verified the property and submitted the sitemap (Success, 68 pages). Eman Homes also confirmed a paid Render plan with database backups on, and UptimeRobot monitoring `/healthz/`.
+
+**2026-10-16: Photos, filters and Insights (`feature/photos-filters-insights`)**
+- Faster photos: Cloudinary delivery URLs get `f_auto,q_auto,c_limit,w_<n>` (WebP/AVIF, compressed, resized), with `srcset` on listing cards and the listing page. Hero slides are 1600px and share images 1200px. Non-Cloudinary URLs are unchanged.
+- Richer filters: location (with suggestions from published listings), currency, min and max price, and 2+/5+ bedroom options. The landing page's own filter is hidden and locked. Active filters show as removable chips with "Clear all". The form keeps the visitor on the current landing page and preserves the sort.
+- Insights: `Article` model (draft, published or archived; scheduled `published_at`; escaped plain-text formatting; cover photo; SEO fields). Pages at `/insights/` and `/insights/<slug>/` with Article JSON-LD. The menu, footer, homepage section and sitemap entries appear only once an article is live. Staff can preview drafts (noindex). Content editors can manage articles.
+- Fixed the invisible footer brand heading and raised the footer section titles to white (dark red on navy was about 2.5:1 contrast).
+
+## 11. Status at 2026-10-16
+
+| Risk | Status |
+|---|---|
+| R1 Media on ephemeral disk | Fixed: Cloudinary, enforced on Render, `check_media_storage` |
+| R2 Committed secret key | Fixed: rotated in production (confirmed by Eman Homes) |
+| R3 No publication state | Fixed: draft/published/archived; sold/rented stay visible |
+| R4 Staging tracked `main` | Fixed: `staging` branch |
+| R5 Enquiry `source` overflow | Fixed |
+| R6 No phone on enquiries | Fixed |
+| R7 Weak spam controls | Fixed: rate limit, honeypot, time trap, notification tracking |
+| R8 Scattered contact data | Fixed: Site Configuration is the single source |
+| R9 Outdated dependencies | Fixed: Django 5.2 LTS, gunicorn 23, everything pinned |
+| R10 Stock photos and unconfirmed copy | Fixed |
+| R11 No "Contact for price" | Fixed |
+| R12 Arbitrary iframe source | Fixed: YouTube/Instagram allow-list |
+| R13 SEO gaps | Fixed: `updated_at`, share tags, canonical, structured data, 404/500, Search Console |
+| R14 Local development friction | Fixed: env-driven DEBUG and HTTPS |
+| R15 Broker agreement links | **Open:** confirm the Google Form and PDF are current |
+
+**Decisions from section 9:**
+1. Address: confirmed.
+2. WhatsApp: +233 20 584 3775.
+3. Hours: 24/7.
+4. Facebook: `facebook.com/emanhomesofficial`.
+5. Sold/rented listings: stay visible, badged.
+6. Broker form: open.
+7. JSON API consumer: none identified, so the API is deferred.
+8. Legal text: developer drafts written; **awaiting review by a Ghana-qualified lawyer before publishing**.
+
+**Still open:**
+- **Eman Homes:**
+  - lawyer review and publication of the privacy policy and terms
+  - uploading listing photos (they feed the carousel, cards and share previews)
+  - confirming the broker agreement links
+  - deciding who writes Insights articles
+- **Development:**
+  - clean-up of Cloudinary files orphaned by failed admin saves
+  - a shared cache if per-worker rate limiting proves too loose
+  - a Projects page, once real development project content exists
+- **Known limitation:** property enquiries submitted before 2026-10-15 were recorded as consented by the old hidden field. Do not use them for marketing.

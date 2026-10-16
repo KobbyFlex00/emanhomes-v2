@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from .models import LegalPage, Property, SiteConfiguration
+from .models import Article, LegalPage, Property, SiteConfiguration
 
 
 def site_configuration(request):
@@ -15,10 +15,12 @@ def site_configuration(request):
         )
         # The PRD shows Rentals only when there are real rental listings.
         has_rentals = Property.objects.public().filter(status='for_rent').exists()
+        has_articles = Article.objects.published().exists()
     except Exception:
         config = None
         published_legal = set()
         has_rentals = False
+        has_articles = False
 
     host = request.get_host() if request is not None else ''
     return {
@@ -30,5 +32,6 @@ def site_configuration(request):
         'privacy_published': LegalPage.PRIVACY in published_legal,
         'terms_published': LegalPage.TERMS in published_legal,
         'has_rentals': has_rentals,
+        'has_articles': has_articles,
         'analytics_measurement_id': getattr(settings, 'ANALYTICS_MEASUREMENT_ID', ''),
     }
