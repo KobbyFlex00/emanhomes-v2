@@ -3,7 +3,8 @@
 }
 
 html { scroll-behavior: smooth; }
-.edge-hero--carousel { min-height: 650px; overflow: hidden; isolation: isolate; }
+/* Column layout: the slide-progress container must not sit beside the text and squeeze it. */
+.edge-hero--carousel { min-height: 650px; overflow: hidden; isolation: isolate; flex-direction: column; justify-content: center; }
 .edge-hero__slide {
     position: absolute;
     inset: 0;
@@ -17,25 +18,44 @@ html { scroll-behavior: smooth; }
     z-index: -2;
 }
 .edge-hero__slide.is-active { opacity: 1; transform: scale(1); z-index: -1; }
-.edge-hero__slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,29,56,.93), rgba(7,29,56,.28) 70%, rgba(7,29,56,.5)); }
-.edge-hero__content { position: relative; z-index: 1; }
+.edge-hero__slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.5), rgba(0,0,0,.18) 55%, rgba(0,0,0,0) 80%); }
+.edge-hero--no-photos .edge-hero__slide { background: linear-gradient(110deg, #071d38, #0d2e59); }
+.edge-hero--no-photos .edge-hero__slide::after { display: none; }
+.edge-hero__content h1, .edge-hero__content .lead { text-shadow: 0 2px 12px rgba(0,0,0,.45); }
+/* The hero is a flex container; without an explicit width the content shrinks against the left edge. */
+.edge-hero__content { position: relative; z-index: 1; width: 100%; padding-top: 2rem; padding-bottom: 5.5rem; }
 .hero-progress { position: absolute; bottom: 2.2rem; right: 0; z-index: 2; display: flex; gap: .55rem; }
 .hero-progress button { width: 42px; height: 4px; padding: 0; border: 0; background: rgba(255,255,255,.4); transition: background .3s, width .3s; }
 .hero-progress button.is-active { width: 72px; background: var(--accent); }
+/* Spinning "Visit our Linktree" badge: bold white text set on a circle, brand red disc. */
 .hero-orbit {
-    position: absolute; right: 9%; bottom: 11%; z-index: 2; width: 142px; height: 142px;
-    border: 2px solid rgba(215,38,56,.95); border-radius: 50%; display: grid; place-items: center;
-    color: #fff; font-size: .62rem; font-weight: 700; line-height: 1.45; letter-spacing: .12em;
-    text-align: center; text-transform: uppercase; text-decoration: none; cursor: pointer;
-    animation: orbit 18s linear infinite; transition: background .2s ease;
-    background: rgba(13,46,89,.52); box-shadow: inset 0 0 0 7px rgba(255,255,255,.12), 0 10px 30px rgba(7,29,56,.22);
+    position: absolute; right: 9%; bottom: 16%; z-index: 3; width: 156px; height: 156px;
+    border-radius: 50%; display: grid; place-items: center; text-decoration: none;
+    background: #d72638; box-shadow: inset 0 0 0 4px rgba(255,255,255,.35), 0 12px 30px rgba(0,0,0,.35);
 }
-.hero-orbit::before { content: "\f0c1"; position: absolute; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: #fff; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 1rem; letter-spacing: 0; top: -19px; left: calc(50% - 19px); animation: counter-orbit 18s linear infinite; }
+.hero-orbit__ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: orbit 16s linear infinite; }
+.hero-orbit__ring text {
+    fill: #fff; font-family: Roboto, Arial, sans-serif; font-size: 15px; font-weight: 900; letter-spacing: 1px;
+}
+.hero-orbit__icon {
+    position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
+    background: #fff; color: #d72638; font-size: 1.45rem; box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
 /* Pause on hover/focus so the text can be read before clicking. */
-.hero-orbit:hover, .hero-orbit:focus-visible { color: #fff; background: rgba(13,46,89,.85); }
-.hero-orbit:hover, .hero-orbit:focus-visible,
-.hero-orbit:hover::before, .hero-orbit:focus-visible::before { animation-play-state: paused; }
-.hero-orbit span { position: relative; z-index: 1; max-width: 86px; white-space: normal; }
+.hero-orbit:hover .hero-orbit__ring, .hero-orbit:focus-visible .hero-orbit__ring { animation-play-state: paused; }
+.hero-orbit:hover .hero-orbit__icon, .hero-orbit:focus-visible .hero-orbit__icon { background: #071d38; color: #fff; }
+
+/* Listing captions over the hero carousel. */
+.hero-captions { position: absolute; left: 0; right: 0; top: 1.5rem; z-index: 2; pointer-events: none; text-align: right; }
+.hero-caption {
+    display: none; text-align: left; max-width: 30rem; padding: .8rem 1.1rem; border-radius: 12px; pointer-events: auto;
+    background: rgba(255,255,255,.94); color: #171b24; text-decoration: none; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+.hero-caption.is-active { display: inline-block; }
+.hero-caption:hover { color: #171b24; background: #fff; }
+.hero-caption__label { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #d72638; }
+.hero-caption__title { display: block; font-weight: 700; font-size: 1.05rem; }
+.hero-caption__meta { display: block; font-size: .85rem; color: #5b6472; }
 .carousel-shell { position: relative; }
 .carousel-track { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: .35rem .15rem 1rem; }
 .carousel-track::-webkit-scrollbar { display: none; }
@@ -62,7 +82,9 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 575px) {
     .edge-hero--carousel { min-height: 610px; }
-    .edge-hero__slide::after { background: linear-gradient(90deg, rgba(7,29,56,.91), rgba(7,29,56,.5)); }
+    .edge-hero__slide::after { background: linear-gradient(90deg, rgba(0,0,0,.55), rgba(0,0,0,.3)); }
+    .hero-captions { display: none; }
+    .hero-caption { max-width: calc(100% - 2rem); }
     .carousel-track > * { flex-basis: 88%; }
     .hero-orbit { display: none; }
     .hero-progress { right: 1rem; bottom: 1.3rem; }

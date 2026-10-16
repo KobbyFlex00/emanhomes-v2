@@ -5,23 +5,36 @@
 {% block meta_description %}Explore homes, land and commercial property in Greater Accra with EmanHomes Limited. Find the right opportunity and speak directly with our team.{% endblock %}
 
 {% block content %}
-<section class="edge-hero edge-hero--carousel" data-hero-carousel tabindex="0" aria-label="EmanHomes property highlights">
-    {% for property in properties|slice:":3" %}<div class="edge-hero__slide{% if forloop.first %} is-active{% endif %}"{% if property.main_image %} style="background-image:url('{{ property.main_image.url }}')"{% elif property.gallery.first %} style="background-image:url('{{ property.gallery.first.image.url }}')"{% endif %}></div>{% empty %}<div class="edge-hero__slide is-active" style="background-color:#071d38"></div>{% endfor %}
+<section class="edge-hero edge-hero--carousel{% if not hero_slides %} edge-hero--no-photos{% endif %}" data-hero-carousel data-interval="45000" tabindex="0" aria-roledescription="carousel" aria-label="Current EmanHomes listings">
+    {% for slide in hero_slides %}<div class="edge-hero__slide{% if forloop.first %} is-active{% endif %}" style="background-image:url('{{ slide.image_url }}')" role="img" aria-label="Photo of {{ slide.property.title }}"></div>{% empty %}<div class="edge-hero__slide is-active"></div>{% endfor %}
     <div class="container edge-hero__content">
         <div class="row align-items-center min-vh-75">
             <div class="col-xl-8">
-                <p class="eyebrow text-accent">EmanHomes Limited · Greater Accra</p>
-                <h1 class="display-2 text-white fw-bold mb-4">Find your place in Ghana — <em>live well, move forward.</em></h1>
-                <p class="lead text-white-50 mb-4 col-lg-8">Homes, land and commercial opportunities for the way you want to live, work and grow.</p>
+                <p class="eyebrow text-accent">Eman Homes Limited GH</p>
+                <h1 class="display-3 text-white fw-bold mb-4">{{ site_config.hero_headline|default:"Your trusted partner for land and property in Ghana" }}</h1>
+                <p class="lead text-white mb-4 col-lg-9">{{ site_config.hero_subheadline|default:"Land, houses, rentals and property services, with clear information at every step." }}</p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="{% url 'properties_list' %}" class="btn btn-accent btn-lg rounded-pill px-4" data-analytics-event="browse_properties">Explore properties <i class="fas fa-arrow-right ms-2"></i></a>
+                    <a href="{% url 'properties_list' %}" class="btn btn-accent btn-lg rounded-pill px-4" data-analytics-event="browse_properties">Explore properties <i class="fas fa-arrow-right ms-2" aria-hidden="true"></i></a>
                     <a href="{% url 'contact' %}?type=listing" class="btn btn-outline-light btn-lg rounded-pill px-4">List your property</a>
                 </div>
             </div>
         </div>
     </div>
-    <a class="hero-orbit" href="{{ site_config.linktree|default:'https://linktr.ee/emanhomes' }}" target="_blank" rel="noopener" data-analytics-event="linktree_click" aria-label="Visit our Linktree (opens in a new tab)"><span aria-hidden="true">Visit our<br>Linktree</span></a>
-    <div class="container"><div class="hero-progress" role="tablist" aria-label="Hero slides">{% for property in properties|slice:":3" %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-hero-slide="{{ forloop.counter0 }}" aria-label="Show slide {{ forloop.counter }}"></button>{% empty %}<button type="button" class="is-active" data-hero-slide="0" aria-label="Show first slide"></button>{% endfor %}</div></div>
+    {% if hero_slides %}
+    <div class="hero-captions container">
+        {% for slide in hero_slides %}<a class="hero-caption{% if forloop.first %} is-active{% endif %}" href="{% url 'property_detail' slide.property.slug %}" data-hero-caption{% if not forloop.first %} tabindex="-1" aria-hidden="true"{% endif %}><span class="hero-caption__label">Available now</span><span class="hero-caption__title">{{ slide.property.title }}</span><span class="hero-caption__meta">{{ slide.property.location }} · {{ slide.property.price_display }} · View property <i class="fas fa-arrow-right" aria-hidden="true"></i></span></a>{% endfor %}
+    </div>
+    {% endif %}
+    <a class="hero-orbit" href="{{ site_config.linktree|default:'https://linktr.ee/emanhomes' }}" target="_blank" rel="noopener" data-analytics-event="linktree_click" aria-label="Visit our Linktree (opens in a new tab)">
+        <svg class="hero-orbit__ring" viewBox="0 0 160 160" aria-hidden="true" focusable="false">
+            <defs><path id="hero-orbit-path" d="M80,80 m-60,0 a60,60 0 1,1 120,0 a60,60 0 1,1 -120,0"></path></defs>
+            <text><textPath href="#hero-orbit-path" textLength="372" lengthAdjust="spacing">VISIT OUR LINKTREE &#8226; VISIT OUR LINKTREE &#8226;</textPath></text>
+        </svg>
+        <span class="hero-orbit__icon" aria-hidden="true"><i class="fas fa-link"></i></span>
+    </a>
+    {% if hero_slides|length > 1 %}
+    <div class="container"><div class="hero-progress" role="group" aria-label="Choose a listing">{% for slide in hero_slides %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-hero-slide="{{ forloop.counter0 }}" aria-label="Show {{ slide.property.title }}"></button>{% endfor %}</div></div>
+    {% endif %}
 </section>
 
 <section class="edge-search-wrap">
