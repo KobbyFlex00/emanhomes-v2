@@ -26,7 +26,7 @@ class SiteConfiguration(models.Model):
     )
 
     # Social Media
-    facebook = models.URLField(blank=True, null=True, default="https://www.facebook.com/emanhomes")
+    facebook = models.URLField(blank=True, null=True, default="https://www.facebook.com/emanhomesofficial")
     instagram = models.URLField(blank=True, null=True, default="https://www.instagram.com/emanhomes")
     twitter = models.URLField("X (Twitter)", blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
@@ -293,3 +293,39 @@ class PropertyImage(models.Model):
 
     def __str__(self):
         return f"{self.property.title} image"
+
+
+class LegalPage(models.Model):
+    PRIVACY, TERMS = 'privacy', 'terms'
+    SLUG_CHOICES = ((PRIVACY, 'Privacy policy'), (TERMS, 'Terms of use'))
+    DRAFT, PUBLISHED = 'draft', 'published'
+    STATUS_CHOICES = (
+        (DRAFT, 'Draft (staff only, not legally approved)'),
+        (PUBLISHED, 'Published (legally approved)'),
+    )
+
+    slug = models.SlugField(choices=SLUG_CHOICES, unique=True)
+    title = models.CharField(max_length=120)
+    body = models.TextField(
+        help_text="Plain text. Start a line with '## ' for a heading or '- ' for a bullet; "
+                  "leave a blank line between paragraphs.",
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=DRAFT, db_default=DRAFT,
+        help_text="Publish only after a Ghana-qualified lawyer has approved the wording.",
+    )
+    approval_note = models.CharField(
+        max_length=200, blank=True, db_default='',
+        help_text="Who approved this version and when, e.g. 'Approved by <lawyer>, 12 Nov 2026'.",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('slug',)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_published(self):
+        return self.status == self.PUBLISHED

@@ -348,8 +348,14 @@
             <hr class="my-4 border-secondary opacity-25">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0 text-white-50 small">&copy; {% now "Y" %} EmanHomes. All rights reserved.</p>
+                    <p class="mb-0 text-white-50 small">&copy; {% now "Y" %} Eman Homes Limited GH. All rights reserved.</p>
                 </div>
+                {% if privacy_published or terms_published %}
+                <div class="col-md-6 text-center text-md-end mt-2 mt-md-0 small">
+                    {% if privacy_published %}<a href="{% url 'privacy' %}" class="text-white-50 hover-white me-3">Privacy policy</a>{% endif %}
+                    {% if terms_published %}<a href="{% url 'terms' %}" class="text-white-50 hover-white">Terms of use</a>{% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </footer>

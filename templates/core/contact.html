@@ -113,7 +113,7 @@
                         <div class="col-12">
                             <div class="form-check">
                                 {{ form.consent_to_contact }}
-                                <label class="form-check-label small text-muted" for="{{ form.consent_to_contact.id_for_label }}">I agree that EmanHomes may contact me about this enquiry.</label>
+                                <label class="form-check-label small text-muted" for="{{ form.consent_to_contact.id_for_label }}">I agree that EmanHomes may contact me about this enquiry.{% if privacy_published %} See our <a href="{% url 'privacy' %}" target="_blank">privacy policy</a>.{% endif %}</label>
                                 {% for error in form.consent_to_contact.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                             </div>
                         </div>

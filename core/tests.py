@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import ContactForm
-from .models import ContactMessage, Property, SiteConfiguration
+from .models import ContactMessage, LegalPage, Property, SiteConfiguration
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -724,3 +724,109 @@ class EnquiryRateLimitTests(TestCase):
                                                HTTP_X_FORWARDED_FOR='10.0.0.1')), '203.0.113.9')
         self.assertEqual(client_ip(factory.get('/', HTTP_X_FORWARDED_FOR='203.0.113.7, 10.0.0.1')), '203.0.113.7')
         self.assertEqual(client_ip(factory.get('/')), '127.0.0.1')
+
+
+# --- Legal pages and official Facebook ----------------------------------------------
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class LegalPageTests(TestCase):
+    def publish(self, slug):
+        LegalPage.objects.filter(slug=slug).update(status=LegalPage.PUBLISHED)
+
+    def test_drafts_are_seeded_and_hidden_from_public(self):
+        self.assertEqual(set(LegalPage.objects.values_list('slug', 'status')),
+                         {('privacy', 'draft'), ('terms', 'draft')})
+        for url in ('/privacy/', '/terms/'):
+            self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_drafts_are_not_linked_or_listed(self):
+        self.assertNotContains(self.client.get(reverse('contact')), 'privacy policy</a>')
+        self.assertNotContains(self.client.get(reverse('home')), 'href="/terms/"')
+        self.assertNotContains(self.client.get('/sitemap.xml'), '/privacy/')
+
+    def test_staff_can_review_draft_with_warning(self):
+        staff = User.objects.create_user('editor', password='pw-12345!x', is_staff=True)
+        self.client.force_login(staff)
+        response = self.client.get('/privacy/')
+        self.assertContains(response, 'DRAFT – not legally approved')
+        self.assertContains(response, 'Data Protection Act, 2012 (Act 843)')
+        self.assertContains(response, '<meta name="robots" content="noindex">')
+
+    def test_published_pages_are_public_and_linked(self):
+        self.publish('privacy')
+        self.publish('terms')
+        page = self.client.get('/privacy/')
+        self.assertEqual(page.status_code, 200)
+        self.assertNotContains(page, 'DRAFT')
+        self.assertContains(self.client.get(reverse('contact')), 'See our <a href="/privacy/"')
+        listing = make_property()
+        self.assertContains(self.client.get(reverse('property_detail', args=[listing.slug])), 'href="/privacy/"')
+        home = self.client.get(reverse('home'))
+        self.assertContains(home, 'href="/terms/"')
+        sitemap = self.client.get('/sitemap.xml')
+        self.assertContains(sitemap, '/privacy/')
+        self.assertContains(sitemap, '/terms/')
+
+    def test_admin_can_edit_but_not_add_or_delete(self):
+        boss = User.objects.create_superuser('boss', 'boss@example.com', 'pw-12345!x')
+        self.client.force_login(boss)
+        privacy = LegalPage.objects.get(slug='privacy')
+        self.assertEqual(self.client.get(f'/admin/core/legalpage/{privacy.pk}/change/').status_code, 200)
+        self.assertEqual(self.client.get('/admin/core/legalpage/add/').status_code, 403)
+        self.assertEqual(self.client.get(f'/admin/core/legalpage/{privacy.pk}/delete/').status_code, 403)
+
+    def test_staff_with_edit_permission_still_cannot_publish(self):
+        from django.contrib.auth.models import Permission
+        editor = User.objects.create_user('legal-editor', password='pw-12345!x', is_staff=True)
+        editor.user_permissions.add(*Permission.objects.filter(codename__in=['change_legalpage', 'view_legalpage']))
+        self.client.force_login(editor)
+        privacy = LegalPage.objects.get(slug='privacy')
+        self.client.post(f'/admin/core/legalpage/{privacy.pk}/change/', {
+            'title': 'Privacy policy', 'body': 'Edited draft', 'status': 'published', 'approval_note': 'self-approved',
+        })
+        privacy.refresh_from_db()
+        self.assertEqual(privacy.body, 'Edited draft')
+        self.assertEqual(privacy.status, LegalPage.DRAFT)
+        self.assertEqual(privacy.approval_note, '')
+
+    def test_content_roles_cannot_publish_legal_pages(self):
+        for group in Group.objects.all():
+            self.assertFalse(group.permissions.filter(codename='change_legalpage').exists(), group.name)
+
+
+class SimpleFormatTests(TestCase):
+    def render(self, text):
+        from .templatetags.content import simple_format
+        return str(simple_format(text))
+
+    def test_structure(self):
+        html = self.render('Intro line\n\n## Heading\n- one\n- two\n\nPara one\nline two')
+        self.assertIn('<p>Intro line</p>', html)
+        self.assertIn('<h2>Heading</h2>', html)
+        self.assertIn('<ul><li>one</li><li>two</li></ul>', html)
+        self.assertIn('<p>Para one<br>line two</p>', html)
+
+    def test_html_is_escaped(self):
+        html = self.render('## <img src=x onerror=alert(1)>\n<script>alert(1)</script>\n\n- <b>x</b>')
+        self.assertNotIn('<script>', html)
+        self.assertNotIn('<img', html)
+        self.assertNotIn('<b>', html)
+        self.assertIn('&lt;script&gt;', html)
+
+    def test_emails_become_links(self):
+        self.assertIn('href="mailto:emanpages@gmail.com"', self.render('Email: emanpages@gmail.com'))
+
+
+class OfficialFacebookTests(TestCase):
+    def test_migration_replaces_old_default_but_keeps_custom_value(self):
+        migration = importlib.import_module('core.migrations.0016_seed_legal_drafts_and_official_facebook')
+        old = SiteConfiguration.objects.create(facebook='https://www.facebook.com/emanhomes')
+        custom = SiteConfiguration.objects.create(facebook='https://www.facebook.com/someotherpage')
+        migration.seed(django_apps, None)
+        old.refresh_from_db()
+        custom.refresh_from_db()
+        self.assertEqual(old.facebook, 'https://www.facebook.com/emanhomesofficial')
+        self.assertEqual(custom.facebook, 'https://www.facebook.com/someotherpage')
+
+    def test_new_configuration_uses_official_page(self):
+        self.assertEqual(SiteConfiguration().facebook, 'https://www.facebook.com/emanhomesofficial')

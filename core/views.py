@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import connection
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -15,7 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
 from .forms import ContactForm
-from .models import Property, Service, TeamMember
+from .models import LegalPage, Property, Service, TeamMember
 from .spam import client_ip, form_started_token, rate_limit_exceeded
 
 logger = logging.getLogger(__name__)
@@ -217,3 +217,11 @@ def contact(request):
 
 def enquiry_thanks(request):
     return render(request, 'core/enquiry_thanks.html')
+
+
+def legal_page(request, slug):
+    page = get_object_or_404(LegalPage, slug=slug)
+    if not page.is_published and not request.user.is_staff:
+        # Drafts are not legally approved: the public must not see them.
+        raise Http404
+    return render(request, 'core/legal_page.html', {'page': page})
