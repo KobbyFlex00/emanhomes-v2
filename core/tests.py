@@ -1027,3 +1027,105 @@ class HeroCarouselTests(TestCase):
         self.assertNotContains(response, 'No.1')
         SiteConfiguration.objects.create(hero_headline='Homes and land across Ghana')
         self.assertContains(self.client.get(reverse('home')), 'Homes and land across Ghana')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class HeroCarouselReviewTests(TestCase):
+    def test_empty_gallery_rows_do_not_take_slots(self):
+        from .models import PropertyImage
+        real = make_property(title='Older listing with real photo', main_image='properties/real.jpg')
+        Property.objects.filter(pk=real.pk).update(created_at=timezone.now() - timedelta(days=30))
+        for n in range(8):
+            empty = make_property(title=f'Empty gallery row {n}')
+            PropertyImage.objects.create(property=empty, image='')
+        slides = self.client.get(reverse('home')).context['hero_slides']
+        self.assertEqual([slide['property'].pk for slide in slides], [real.pk])
+
+    def test_one_gallery_query_regardless_of_gallery_size(self):
+        from .models import PropertyImage
+        from .views import hero_slides
+        for n in range(8):
+            listing = make_property(title=f'Gallery listing {n}')
+            for photo in range(6):
+                PropertyImage.objects.create(property=listing, image=f'properties/gallery/{n}-{photo}.jpg',
+                                             display_order=photo)
+        with self.assertNumQueries(2):
+            slides = hero_slides()
+        self.assertEqual(len(slides), 8)
+        self.assertTrue(all(slide['image_url'].endswith('-0.jpg') for slide in slides))
+
+    def test_ties_are_ordered_consistently(self):
+        stamp = timezone.now()
+        listings = [make_property(title=f'Tied {n}', main_image=f'properties/t{n}.jpg') for n in range(10)]
+        Property.objects.filter(pk__in=[p.pk for p in listings]).update(created_at=stamp)
+        from .views import hero_slides
+        self.assertEqual([s['property'].pk for s in hero_slides()], sorted(p.pk for p in listings)[:8])
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class GalleryOnlyListingAdminTests(TestCase):
+    def setUp(self):
+        import tempfile
+        self.media = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media)
+        self.override.enable()
+        self.client.force_login(User.objects.create_superuser('boss', 'boss@example.com', 'pw-12345!x'))
+
+    def tearDown(self):
+        import shutil
+        self.override.disable()
+        shutil.rmtree(self.media, ignore_errors=True)
+
+    def post_listing(self, gallery_image=None):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        data = {
+            'title': 'Gallery only plot', 'slug': '', 'category': 'land', 'status': 'for_sale',
+            'publication_status': 'published', 'currency': 'GHS', 'price': '1000', 'location': 'Aburi',
+            'description': 'Plot', 'bedrooms': '0', 'bathrooms': '0', 'property_size_unit': 'plots',
+            'amenities': '', 'video_url': '', 'seo_title': '', 'seo_description': '',
+            'gallery-TOTAL_FORMS': '1', 'gallery-INITIAL_FORMS': '0',
+            'gallery-MIN_NUM_FORMS': '0', 'gallery-MAX_NUM_FORMS': '1000',
+            'gallery-0-alt_text': 'Plot view', 'gallery-0-caption': '', 'gallery-0-display_order': '0',
+        }
+        if gallery_image:
+            buffer = BytesIO()
+            Image.new('RGB', (40, 30), (120, 160, 90)).save(buffer, 'JPEG')
+            data['gallery-0-image'] = SimpleUploadedFile('plot.jpg', buffer.getvalue(), content_type='image/jpeg')
+        return self.client.post('/admin/core/property/add/', data)
+
+    def test_listing_with_only_a_gallery_photo_can_be_saved(self):
+        response = self.post_listing(gallery_image=True)
+        self.assertEqual(response.status_code, 302, getattr(response, 'context', None) and
+                         response.context['inline_admin_formsets'][0].formset.non_form_errors())
+        listing = Property.objects.get(title='Gallery only plot')
+        self.assertEqual(listing.gallery.count(), 1)
+
+    def test_listing_with_no_photo_or_video_is_rejected(self):
+        response = self.post_listing(gallery_image=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Add a main image, a gallery photo or a video link.')
+        self.assertFalse(Property.objects.filter(title='Gallery only plot').exists())
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class ListingPhotoTests(TestCase):
+    def test_gallery_rows_without_files_never_crash_pages(self):
+        from .models import PropertyImage
+        listing = make_property(title='Has an empty gallery row')
+        PropertyImage.objects.create(property=listing, image='')
+        for url in (reverse('home'), reverse('properties_list'), reverse('property_detail', args=[listing.slug])):
+            self.assertEqual(self.client.get(url).status_code, 200, url)
+
+    def test_gallery_only_listing_shows_its_photos(self):
+        from .models import PropertyImage
+        listing = make_property(title='Gallery only', video_url='')
+        PropertyImage.objects.create(property=listing, image='properties/gallery/a.jpg', display_order=1)
+        PropertyImage.objects.create(property=listing, image='properties/gallery/b.jpg', display_order=2)
+        self.assertEqual(listing.cover_image_url, '/media/properties/gallery/a.jpg')
+        detail = self.client.get(reverse('property_detail', args=[listing.slug]))
+        self.assertNotContains(detail, 'No Image Available')
+        self.assertContains(detail, '/media/properties/gallery/b.jpg')
+        self.assertContains(self.client.get(reverse('properties_list')), 'src="/media/properties/gallery/a.jpg"')

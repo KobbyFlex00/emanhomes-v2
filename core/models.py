@@ -187,12 +187,25 @@ class Property(models.Model):
         return slug
 
     def clean(self):
-        if not self.main_image and not self.video_url:
-            raise ValidationError("You must provide either an Image or a Video Link.")
+        # "Needs a photo or video" is checked in the admin (PropertyImageInlineFormSet),
+        # where gallery photos added on the same page can count.
         if self.price is not None and self.price < 0:
             raise ValidationError({'price': "Price cannot be negative."})
         if self.video_url and not self.get_embed_url():
             raise ValidationError({'video_url': "Use a YouTube video or an Instagram post/reel link."})
+
+    @property
+    def photos(self):
+        """Gallery photos that actually have a file (rows without one are skipped)."""
+        return [photo for photo in self.gallery.all() if photo.image]
+
+    @property
+    def cover_image_url(self):
+        """Main image, else the first gallery photo, else None."""
+        if self.main_image:
+            return self.main_image.url
+        photos = self.photos
+        return photos[0].image.url if photos else None
 
     @property
     def is_closed(self):

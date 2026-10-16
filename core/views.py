@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -15,7 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
 from .forms import ContactForm
-from .models import LegalPage, Property, Service, TeamMember
+from .models import LegalPage, Property, PropertyImage, Service, TeamMember
 from .spam import client_ip, form_started_token, rate_limit_exceeded
 
 logger = logging.getLogger(__name__)
@@ -111,18 +111,23 @@ HERO_SLIDE_LIMIT = 8
 
 def hero_slides():
     """Photos of current listings for the homepage carousel (listings with no photo are skipped)."""
+    first_gallery_photo = Prefetch(
+        'gallery',
+        queryset=PropertyImage.objects.exclude(image='').order_by('display_order', 'id')[:1],
+        to_attr='hero_photos',
+    )
     listings = (
         Property.objects.public()
         .exclude(status__in=Property.CLOSED_STATUSES)
-        .filter(Q(main_image__gt='') | Q(gallery__isnull=False))
+        # Only rows with a real file count, so empty gallery rows cannot take a slot.
+        .filter(Q(main_image__gt='') | Q(gallery__image__gt=''))
         .distinct()
-        .order_by('-is_featured', '-created_at')
-        .prefetch_related('gallery')[:HERO_SLIDE_LIMIT]
+        .order_by('-is_featured', '-created_at', 'pk')
+        .prefetch_related(first_gallery_photo)[:HERO_SLIDE_LIMIT]
     )
     slides = []
     for listing in listings:
-        image = listing.main_image if listing.main_image else next(
-            (photo.image for photo in listing.gallery.all() if photo.image), None)
+        image = listing.main_image or (listing.hero_photos[0].image if listing.hero_photos else None)
         if image:
             slides.append({'property': listing, 'image_url': image.url})
     return slides

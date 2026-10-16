@@ -48,23 +48,14 @@
                 </h2>
             </div>
 
+            {% with photos=property.photos %}
             <div class="position-relative mb-4 rounded overflow-hidden shadow-sm">
                 {% if property.get_embed_url %}
                     <div class="ratio ratio-16x9">
                         <iframe loading="lazy" src="{{ property.get_embed_url }}" title="Video of {{ property.title }}" allowfullscreen style="border:0;"></iframe>
                     </div>
-
-                    {% if property.gallery.all %}
-                    <div class="row g-2 mb-4">
-                        {% for gallery_image in property.gallery.all %}
-                        <div class="col-4">
-                            <img src="{{ gallery_image.image.url }}" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{% firstof gallery_image.alt_text gallery_image.caption property.title %}" loading="lazy">
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                {% elif property.main_image %}
-                    <img src="{{ property.main_image.url }}" class="img-fluid w-100" style="max-height: 500px; object-fit: cover;" alt="{{ property.title }}">
+                {% elif property.cover_image_url %}
+                    <img src="{{ property.cover_image_url }}" class="img-fluid w-100" style="max-height: 500px; object-fit: cover;" alt="{{ property.title }}">
                 {% else %}
                     <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 400px;">No Image Available</div>
                 {% endif %}
@@ -76,6 +67,16 @@
                     {{ property.get_status_display }}
                 </span>
             </div>
+            {% if photos %}
+            <div class="row g-2 mb-4">
+                {% for gallery_image in photos %}
+                <div class="col-4">
+                    <img src="{{ gallery_image.image.url }}" class="img-fluid rounded w-100" style="height:110px;object-fit:cover" alt="{% firstof gallery_image.alt_text gallery_image.caption property.title %}" loading="lazy">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
 
             <h4 class="fw-bold mb-3 mt-5 text-primary-custom">Property Details</h4>
             <div class="p-4 bg-light rounded border-0">

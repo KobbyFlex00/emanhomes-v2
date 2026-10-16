@@ -2,6 +2,8 @@ import logging
 
 import cloudinary.exceptions
 from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
+from django.forms.models import BaseInlineFormSet
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 
@@ -39,8 +41,23 @@ class ServiceAdmin(admin.ModelAdmin):
     list_editable = ('display_order', 'is_active')
 
 
+class PropertyImageInlineFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        listing = self.instance
+        if listing.main_image or listing.video_url:
+            return
+        has_gallery_photo = any(
+            form.cleaned_data.get('image') and not form.cleaned_data.get('DELETE')
+            for form in self.forms if hasattr(form, 'cleaned_data')
+        )
+        if not has_gallery_photo:
+            raise ValidationError('Add a main image, a gallery photo or a video link.')
+
+
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage
+    formset = PropertyImageInlineFormSet
     extra = 1
     fields = ('preview', 'image', 'alt_text', 'caption', 'display_order')
     readonly_fields = ('preview',)
